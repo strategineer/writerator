@@ -28,9 +28,11 @@ class BasicText(object):
         self.text = text
     
     def count(self, to_count):
+        """Counts the number of times to_count appears in BasicText"""
         return self.text.count(to_count)
     
     def __hash__(self):
+        """Computes a hash code for BasicText objects"""
         return hash(self.text)
     
     def __eq__(self, other):

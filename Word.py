@@ -32,7 +32,9 @@ class Word(BasicText):
         """
             Counts the number of syllables for an English language Word.
             
-            ~85% Accuracy apparantly
+            ~85% Accuracy apparently, but works on all words. Not only words in
+            the dictionnary
+            
             COPYRIGHT Greg Fast, Dispenser (python port)
 
             Better Algorithm: http://pypi.python.org/pypi/PyHyphen/2.0.1

@@ -22,7 +22,7 @@ from BasicText import BasicText
 
 class Letter(BasicText):
     """Represents a Letter."""
-    consonants = ["bcdfghjklmnpqrstvxzwy"]
+    consonants = "bcdfghjklmnpqrstvxzwy"
     
     def __init__(self, text):
         """Initializes a Letter."""
@@ -30,8 +30,18 @@ class Letter(BasicText):
         
     def isVowel(self):
         """Determines if a Letter is a vowel."""
-        return self.text.lower() not in consonants
+        return self.text.lower() not in Letter.consonants
     
     def isConsonant(self):
         """Determines if a Letter is a consonant."""
-        return self.text.lower() in consonants
+        return self.text.lower() in Letter.consonants
+
+def main():
+    for letter in list("abcdefghijklmnopqrstuvwxyz"):
+        letter_obj = Letter(letter)
+        print(str(letter_obj) + ": isConsonant? " + str(letter_obj.isConsonant())
+              + " isVowel? " + str(letter_obj.isVowel()))
+
+
+if __name__== "__main__":
+    main()
