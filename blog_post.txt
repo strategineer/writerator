@@ -10,7 +10,7 @@ The name "Just Another Cog" is a warning for myself as much as it an advertiseme
 
 On one hand, it will serve as a constant reminder of what I do not want to become. Namely, a stressed and unhappy guy working for money rather than for the love of the work I do, like a "Cog".
 
-On the other, being a "Cog" might be so bad. A cog is a irreplaceable part of a machine, it's effective and well suited for the job at hand. It's hard working and as a programmer, I literally act as an interface between the computer, i.e. the machine, and the outside world. So this "Cog" metaphor is more appropriate than would be otherwise.
+On the other, being a "Cog" might be so bad. A cog is a irreplaceable part of a machine, it's effective and well suited for the job at hand. It's hard working and as a programmer, I literally act as an interface between the computer, the machine, and the outside world. So this "Cog" metaphor is more appropriate than would be otherwise.
 
 So maybe, being "Just Another Cog" isn't such a bad thing.
 
