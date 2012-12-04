@@ -31,7 +31,7 @@ class Phrase(object):
         return self.phrase.count(string)
     
     def __hash__(self):
-        return hash(repr(self))
+        return hash(self.phrase)
     
     def __eq__(self, other):
         if isinstance(other, Phrase):

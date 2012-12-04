@@ -41,7 +41,7 @@ class Letter(object):
         return self.letter.count(string)
     
     def __hash__(self):
-        return hash(repr(self))
+        return hash(self.letter)
     
     def __eq__(self, other):
         if isinstance(other, Letter):

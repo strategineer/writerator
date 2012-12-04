@@ -79,7 +79,7 @@ class Word(object):
         return self.word.count(string)
     
     def __hash__(self):
-        return hash(repr(self))
+        return hash(self.word)
     
     def __eq__(self, other):
         if isinstance(other, Word):
