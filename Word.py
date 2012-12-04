@@ -27,18 +27,44 @@ class Word(object):
         self.word = word
     
     def countSyllables(self):
-        """Counts the number of syllables for an English language Word."""
+        """
+            Counts the number of syllables for an English language Word.
+            
+            ~85% Accuracy apparantly
+            COPYRIGHT Greg Fast, Dispenser (python port)
+
+            Better Algorithm: http://pypi.python.org/pypi/PyHyphen/2.0.1
+        """
+        SubSyl = ('cial','tia','cius','cious','giu','ion','iou','sia$','.ely$',)
+        AddSyl = ('ia','riet','dien','iu','io','ii','[aeiouym]bl$','[aeiou]{3}',
+                  '^mc','ism$','([^aeiouy])\1l$', '[^l]lien','^coa[dglx].',
+                  '[^gq]ua[^auieo]','dnt$',)
+
         word = self.word.lower()
+        word = word.replace('\'', '')
+        word = re.sub(r'e$', '', word);
         
-        if len(word) < 3:
-            count = 1
-        elif word.endswith('e'):
-            word = word[:-1]
-        elif word.endswith('es'):
-            word = word[:-2]
-        elif word.endswith('ed'):
-            word = word[:-2]
-        return len(re.findall('[aeiouy]+', word))
+        scrugg = re.split(r'[^aeiouy]+', word);
+        for i in scrugg:
+            if not i:
+                scrugg.remove(i)
+        
+        syl = 0;
+        for syll in SubSyl:
+            if re.search(syll, word):
+                syl -= 1
+        
+        for syll in AddSyl:
+            if re.search(syll, word):
+                syl += 1
+                
+        if len(word)==1:
+            syl +=1	# 'x'
+        
+        # count vowel groupings
+        syl += len(scrugg)
+        
+        return (syl or 1)	# got no vowels? ("the", "crwth")
     
     def isAdverb(self):
         """Determines whether word is an adverb."""
@@ -58,7 +84,7 @@ def main():
     for word in ('honour', 'decode', 'decoded', 'oiseau', 'mathematical',
                  'abe','hippopotamus', 'reincarnation', 'information'):
         word_obj = Word(word)
-        print(str(word_obj) + " " + str(word_obj.getSyllables()))
+        print(str(word_obj) + " " + str(word_obj.countSyllables()))
 
 
 if __name__== "__main__":

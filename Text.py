@@ -29,12 +29,9 @@ class Text(object):
     # w for words, l for letters
     types_of_sequences = ['w', 'l', 'p']
 
-    def __init__(self, filename=None):
+    def __init__(self, filename):
         """Initializes a Text."""
-        self.text = ""
-        
-        if filename:
-            self.load_from_txt_file(filename)
+        self.load_from_txt_file(filename)
 
     def load_from_txt_file(self, filename_in):
         """Loads more text from a plain text file into a Text object."""
@@ -43,7 +40,7 @@ class Text(object):
                 lines = file.readlines()
             
             lines = map(lambda line: line.strip(), lines)
-            self.text += " ".join(lines)
+            self.text = " ".join(lines)
 
         else:
             logging.error("No such filename: " + filename_in)
@@ -57,27 +54,39 @@ class Text(object):
             "Bill is cool" => letters (l) => ["B", "i", "l", "l", "i", "s", ...]
         """
         if kind in Text.types_of_sequences:
+            kind_class = None
             if kind == 'w':
                 split_text = self.text.split(" ")
+                split_text = clean_splitted_text(split_text)
+                kind_class = Word
             
             elif kind == 'p':
                 split_text = self.text.split(".")
+                split_text = clean_splitted_text(split_text)
+                kind_class = Phrase
 
             elif kind == 'l':
                 split_text = list(self.text)
+                split_text = clean_splitted_text(split_text)
+                kind_class = Letter
+
+
             
-            # Clean up sequences. Remove whitespace, remove punctuation
-            split_text = map(lambda sequence: sequence.rstrip(".,").strip(), split_text)
-            
-            # Removes empty string
-            split_text = filter(None, split_text)
             return split_text
         
         else:
             logging.error("No such type available cannot split: " + kind)
             logging.error("try: " + str(Text.types_of_sequences))
-            sys.exit(0)  
-
+            sys.exit(0)
+    
+    def clean_splitted_text(split_text):
+            # Clean up sequences. Remove whitespace, remove punctuation
+            split_text = map(lambda sequence: sequence.rstrip(".,").strip(), split_text)
+            # Removes empty string
+            split_text = filter(None, split_text)
+            
+            return split_text
+        
     def rank_by_total_count(self, number_of_words_to_display, kind=types_of_sequences[0]):
         """
             Returns a list containing the words (w), letters (l) or phrases (p)
