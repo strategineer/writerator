@@ -26,7 +26,7 @@ from Text import Text
 
 def main():
     #Runs Unit-Tests
-    subprocess.call("python Text_test.py -q")
+    #subprocess.call("python Text_test.py -q")
     
     parser = argparse.ArgumentParser(description="""scans through text files
                                      containing text written in human languages
@@ -84,9 +84,12 @@ def main():
         elif args.matches:
             ranked_sequences = text.rank_by_number_of_matches(args.matches, args.number_to_display, args.type)
 
-        for sequence in ranked_sequences:
-            print(str(sequence))
-            print("\n")
+        for sequence_n_count in ranked_sequences:
+            (sequence, count) = sequence_n_count
+            
+            if count != 0:
+                print(str(count) + ": " + str(sequence))
+                print("\n")
 
 if __name__== "__main__":
     #main()
