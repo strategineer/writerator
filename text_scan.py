@@ -91,7 +91,7 @@ def main():
 if __name__== "__main__":
     #main()
     
-    cProfile.run("main()", "main_stats")
+    cProfile.run("main()", "main_stats.prof")
     
-    p = pstats.Stats('main_stats')
+    p = pstats.Stats('main_stats.prof')
     p.strip_dirs().sort_stats('time').print_stats(5)

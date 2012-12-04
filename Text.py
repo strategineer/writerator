@@ -18,9 +18,9 @@ import logging
 import os
 import io
 import sys
-import re
 
 from collections import Counter
+from Word import Word
 
 class Text(object):
     """Represents a human language text."""
@@ -120,18 +120,19 @@ class Text(object):
     
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""
-        adverbs = re.findall(r"\w+ly", self.text)
+        words = self.split_text_by_sequence('w')
+        adverbs = []
+        
+        for word in words:
+            word_obj = Word(word)
+            if word_obj.isAdverb():
+                adverbs.append(word)
+        
         return adverbs
     
     def __str__(self):
-        """Prints out the text"""
-        
-        output = ""
-        
-        logging.error("__str__ NOT IMPLEMENTED")
-        sys.exit(0)
-        
-        return output
+        """Returns str form of Text"""
+        return self.text
 
     
     def __repr__(self):
