@@ -78,7 +78,7 @@ class Text(object):
             logging.error("try: " + str(Text.types_of_sequences))
             sys.exit(0)  
 
-    def rank_by_occurences(self, number_of_words_to_display, kind=types_of_sequences[0]):
+    def rank_by_total_count(self, number_of_words_to_display, kind=types_of_sequences[0]):
         """
             Returns a list containing the words (w), letters (l) or phrases (p)
             within a text ranked by the number of occurences from largest to
@@ -104,16 +104,14 @@ class Text(object):
             sequences = self.split_text_by_sequence(kind)
             set_of_sequences = set(sequences)
             
-            #Keeps list always sorted
             ranked_by_matches = []
             
             for sequence in set_of_sequences:
-                matches = re.findall(sequence_to_match, sequence)
-                ranked_by_matches.append( (sequence, len(matches)) )
+                ranked_by_matches.append( ( sequence, sequence.count(sequence_to_match) ) )
+
+            ranked_by_matches.sort(reverse=True, key=lambda x: x[1])
             
-            ranked_by_matches.sort(key=lambda x: x[1])
-            
-            return ranked_by_matches[-number_of_words_to_display:][::-1]
+            return ranked_by_matches[:number_of_words_to_display]
         
         else:
             logging.error("No such type available cannot rank by matches: " + kind)

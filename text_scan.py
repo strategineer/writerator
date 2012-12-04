@@ -19,6 +19,9 @@ import logging
 import sys
 import subprocess
 
+import cProfile
+import pstats
+
 from Text import Text
 
 def main():
@@ -50,13 +53,13 @@ def main():
     
     group = parser.add_mutually_exclusive_group()
     
-    group.add_argument("-o", "--occurences",
+    group.add_argument("-t", "--totalcount",
                    help="""ranks each sequence by the times they occur in the
-                   text.""", action="store_true")
+                   text as a whole.""", action="store_true")
     
-    group.add_argument("-m", "--matches", type=str, metavar="REGEX",
-                       help="""ranks the sequences by the amount of matches they
-                       have.""")
+    group.add_argument("-m", "--matches", type=str, metavar="MATCH",
+                       help="""ranks the sequences by the amount of times MATCH
+                       appears in the sequence.""")
 
     args = parser.parse_args()
     
@@ -74,9 +77,9 @@ def main():
     
     text = Text(filename_in)
     
-    if args.occurences or args.matches:
-        if args.occurences:
-            ranked_words = text.rank_by_occurences(args.number_to_display, args.type)
+    if args.totalcount or args.matches:
+        if args.totalcount:
+            ranked_words = text.rank_by_total_count(args.number_to_display, args.type)
         
         elif args.matches:
             ranked_words = text.rank_by_number_of_matches(args.matches, args.number_to_display, args.type)
@@ -86,4 +89,9 @@ def main():
             print("\n")
 
 if __name__== "__main__":
-    main()
+    #main()
+    
+    cProfile.run("main()", "main_stats")
+    
+    p = pstats.Stats('main_stats')
+    p.strip_dirs().sort_stats('time').print_stats(5)
