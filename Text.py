@@ -28,7 +28,15 @@ class Text(object):
     #Represents the kind of sequences of characters able to be analyzed
     # w for words, l for letters
     types_of_sequences = ['w', 'l', 'p']
-
+    
+    def clean_splitted_text(str_sequences):
+        # Clean up sequences. Remove whitespace, remove punctuation
+        str_sequences = [x.rstrip(".,").strip() for x in str_sequences]
+        # Removes empty string
+        str_sequences = filter(None, str_sequences)
+        
+        return str_sequences
+    
     def __init__(self, filename):
         """Initializes a Text."""
         self.load_from_txt_file(filename)
@@ -53,39 +61,37 @@ class Text(object):
             i.e. "Bill. Is. Cool." => words (w) => ["Bill.", "is.", "cool."]
             "Bill is cool" => letters (l) => ["B", "i", "l", "l", "i", "s", ...]
         """
+        logging.debug("Entering Text.split_text_by_sequence ...")
         if kind in Text.types_of_sequences:
             kind_class = None
             if kind == 'w':
                 split_text = self.text.split(" ")
-                split_text = clean_splitted_text(split_text)
-                kind_class = Word
+                
+                split_text = Text.clean_splitted_text(split_text)
+                for sequence in split_text:
+                    split_text = [Word(x) for x in split_text]
             
             elif kind == 'p':
                 split_text = self.text.split(".")
-                split_text = clean_splitted_text(split_text)
-                kind_class = Phrase
+                
+                split_text = Text.clean_splitted_text(split_text)
+                for sequence in split_text:
+                    split_text = [Phrase(x) for x in split_text]
 
             elif kind == 'l':
                 split_text = list(self.text)
-                split_text = clean_splitted_text(split_text)
-                kind_class = Letter
+                
+                split_text = Text.clean_splitted_text(split_text)
+                for sequence in split_text:
+                    split_text = [Letter(x) for x in split_text]
 
-
-            
+            logging.debug("Exiting Text.split_text_by_sequence ...")
             return split_text
         
         else:
             logging.error("No such type available cannot split: " + kind)
             logging.error("try: " + str(Text.types_of_sequences))
             sys.exit(0)
-    
-    def clean_splitted_text(split_text):
-            # Clean up sequences. Remove whitespace, remove punctuation
-            split_text = map(lambda sequence: sequence.rstrip(".,").strip(), split_text)
-            # Removes empty string
-            split_text = filter(None, split_text)
-            
-            return split_text
         
     def rank_by_total_count(self, number_of_words_to_display, kind=types_of_sequences[0]):
         """
@@ -93,11 +99,11 @@ class Text(object):
             within a text ranked by the number of occurences from largest to
             smallest.
         """
-
+        logging.debug("Entering Text.rank_by_total_count ...")
         if kind in Text.types_of_sequences:
             sequences = self.split_text_by_sequence(kind)
             
-            occurences = Counter(sequences)
+            occurences = Counter( map(lambda sequence: str(sequence) ,sequences) )
             
             return occurences.most_common()[:number_of_words_to_display]
         
@@ -108,7 +114,7 @@ class Text(object):
             sys.exit(0)
     
     def rank_by_number_of_matches(self, sequence_to_match, number_of_words_to_display, kind=types_of_sequences[0]):
-        
+        logging.debug("Entering Text.rank_by_number_of_matches ...")
         if kind in Text.types_of_sequences:
             sequences = self.split_text_by_sequence(kind)
             set_of_sequences = set(sequences)
@@ -116,7 +122,7 @@ class Text(object):
             ranked_by_matches = []
             
             for sequence in set_of_sequences:
-                ranked_by_matches.append( ( sequence, sequence.count(sequence_to_match) ) )
+                ranked_by_matches.append( (sequence, sequence.count(sequence_to_match) ) )
 
             ranked_by_matches.sort(reverse=True, key=lambda x: x[1])
             

@@ -16,7 +16,9 @@
 
 import logging
 import sys
+from functools import *
 
+@total_ordering
 class Phrase(object):
     """Represents a Phrase."""
 
@@ -25,6 +27,24 @@ class Phrase(object):
         assert isinstance(phrase, str)
         self.phrase = phrase
     
+    def count(self, string):
+        return self.phrase.count(string)
+    
+    def __hash__(self):
+        return hash(repr(self))
+    
+    def __eq__(self, other):
+        if isinstance(other, Phrase):
+            return self.phrase == other.phrase
+        else:
+            return NotImplemented
+    
+    def __lt__(self, other):
+        if isinstance(other, Phrase):
+            return self.phrase < other.phrase
+        else:
+            return NotImplemented
+        
     def __str__(self):
         """Returns str form of Phrase"""
         return self.phrase
