@@ -89,9 +89,9 @@ def main():
             print("\n")
 
 if __name__== "__main__":
-    #main()
-    
-    cProfile.run("main()", "main_stats.prof")
-    
-    p = pstats.Stats('main_stats.prof')
-    p.strip_dirs().sort_stats('time').print_stats(5)
+    main()
+    #
+    #cProfile.run("main()", "main_stats.prof")
+    #
+    #p = pstats.Stats('main_stats.prof')
+    #p.strip_dirs().sort_stats('time').print_stats(5)
