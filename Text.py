@@ -57,58 +57,62 @@ class Text(BasicText):
         else:
             logging.error("No such filename: " + filename_in)
             sys.exit(0)
-
+    
+    def parse_phrases(self):
+        split_text = self.text.split(".")
+            
+        split_text = Text.clean_splitted_text(split_text)
+        return [Phrase(x) for x in split_text]
+    
+    def parse_words(self):
+        split_text = self.text.split(" ")
+        
+        split_text = Text.clean_splitted_text(split_text)
+        return [Word(x) for x in split_text]
+    
+    def parse_letters(self):
+        split_text = list(self.text)
+        
+        split_text = Text.clean_splitted_text(split_text)
+        return [Letter(x) for x in split_text]
+    
     def split_text_by_sequence(self, kind=types_of_sequences[0]):
         """
             Splits the text by sequence and returns a list
             
-            i.e. "Bill. Is. Cool." => words (w) => ["Bill.", "is.", "cool."]
-            "Bill is cool" => letters (l) => ["B", "i", "l", "l", "i", "s", ...]
+            i.e. "Bill. Is. Cool." => words (w) => ["Bill.", "Is.", "Cool."]
+            "Bill. Is. cool." => letters (l) => ["B", "i", "l", "l", "I", "s", ...]
+            "Bill. Is very. cool." => phrases (p) => ["Bill", "Is very", "Cool"]
         """
-        logging.debug("Entering Text.split_text_by_sequence ...")
         if kind in Text.types_of_sequences:
             if kind == 'w':
-                split_text = self.text.split(" ")
-                
-                split_text = Text.clean_splitted_text(split_text)
-                for sequence in split_text:
-                    split_text = [Word(x) for x in split_text]
+                return self.parse_words()
             
             elif kind == 'p':
-                split_text = self.text.split(".")
-                
-                split_text = Text.clean_splitted_text(split_text)
-                for sequence in split_text:
-                    split_text = [Phrase(x) for x in split_text]
+                return self.parse_phrases()
 
             elif kind == 'l':
-                split_text = list(self.text)
-                
-                split_text = Text.clean_splitted_text(split_text)
-                for sequence in split_text:
-                    split_text = [Letter(x) for x in split_text]
-
-            logging.debug("Exiting Text.split_text_by_sequence ...")
-            return split_text
+                return self.parse_letters()
         
         else:
             logging.error("No such type available cannot split: " + kind)
             logging.error("try: " + str(Text.types_of_sequences))
             sys.exit(0)
         
-    def rank_by_total_count(self, number_of_words_to_display, kind=types_of_sequences[0]):
+    def rank_by_total_count(self, kind=types_of_sequences[0]):
         """
-            Returns a list containing the words (w), letters (l) or phrases (p)
-            within a text ranked by the number of occurences from largest to
-            smallest.
+            Returns a list of tuples containing the number of occurrences of each
+            sequence [words (w), letters (l) or phrases (p)] found in the Text and
+            the str form of the sequences.
+            
+            The list is sorted by number of occurences in decreasing order.
         """
-        logging.debug("Entering Text.rank_by_total_count ...")
         if kind in Text.types_of_sequences:
             sequences = self.split_text_by_sequence(kind)
             
-            occurences = Counter( [str(sequence) for sequence in sequences] )
+            occurences = Counter( [str(x) for x in sequences] )
             
-            return occurences.most_common()[:number_of_words_to_display]
+            return occurences.most_common()
         
         else:
             logging.error("No such type available cannot rank by occurrences: "
@@ -116,8 +120,14 @@ class Text(BasicText):
             logging.error("try: " + str(Text.types_of_sequences))
             sys.exit(0)
     
-    def rank_by_number_of_matches(self, sequence_to_match, number_of_words_to_display, kind=types_of_sequences[0]):
-        logging.debug("Entering Text.rank_by_number_of_matches ...")
+    def rank_by_number_of_matches(self, sequence_to_match, kind=types_of_sequences[0]):
+        """
+            Returns a list of tuples containing the number of matches found in
+            each sequence [words (w), letters (l) or phrases (p)] of the Text and
+            the str form of the sequence.
+            
+            The list is sorted by number of matches in decreasing order.
+        """
         if kind in Text.types_of_sequences:
             sequences = self.split_text_by_sequence(kind)
             set_of_sequences = set(sequences)
@@ -129,13 +139,13 @@ class Text(BasicText):
 
             ranked_by_matches.sort(reverse=True, key=lambda x: x[1])
             
-            return ranked_by_matches[:number_of_words_to_display]
+            return ranked_by_matches
         
         else:
             logging.error("No such type available cannot rank by matches: " + kind)
             logging.error("try: " + str(Text.types_of_sequences))
             sys.exit(0)
-    
+
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""
         words = self.split_text_by_sequence('w')
