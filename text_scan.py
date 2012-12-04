@@ -79,13 +79,18 @@ def main():
     
     if args.totalcount or args.matches:
         if args.totalcount:
-            ranked_sequences = text.rank_by_total_count(args.number_to_display, args.type)
+            ranked_sequences = text.rank_by_total_count(args.type)
         
         elif args.matches:
-            ranked_sequences = text.rank_by_number_of_matches(args.matches, args.number_to_display, args.type)
-
-        for sequence_n_count in ranked_sequences:
-            (sequence, count) = sequence_n_count
+            ranked_sequences = text.rank_by_number_of_matches(args.matches, args.type)
+        
+        if len(ranked_sequences) < args.number_to_display:
+            last_index = len(ranked_sequences)
+        else:
+            last_index = args.number_to_display
+        
+        for i in range(0, last_index):
+            (sequence, count) = ranked_sequences[i]
             
             if count != 0:
                 print(str(count) + ": " + str(sequence))
