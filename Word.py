@@ -17,17 +17,17 @@
 import logging
 import sys
 import re
-from functools import *
 
-@total_ordering
-class Word(object):
+from BasicText import BasicText
+
+
+class Word(BasicText):
     """Represents a Word."""
     
-    def __init__(self, word):
+    def __init__(self, text):
         """Initializes a Word."""
-        assert isinstance(word, str)
-        self.word = word
-    
+        super( Word, self ).__init__(text)
+        
     def countSyllables(self):
         """
             Counts the number of syllables for an English language Word.
@@ -42,7 +42,7 @@ class Word(object):
                   '^mc','ism$','([^aeiouy])\1l$', '[^l]lien','^coa[dglx].',
                   '[^gq]ua[^auieo]','dnt$',)
 
-        word = self.word.lower()
+        word = self.text.lower()
         word = word.replace('\'', '')
         word = re.sub(r'e$', '', word);
         
@@ -70,35 +70,10 @@ class Word(object):
     
     def isAdverb(self):
         """Determines whether word is an adverb."""
-        if re.match(r"\w+ly", self.word):
+        if re.match(r"\w+ly", self.text):
             return True
         else:
             return False
-    
-    def count(self, string):
-        return self.word.count(string)
-    
-    def __hash__(self):
-        return hash(self.word)
-    
-    def __eq__(self, other):
-        if isinstance(other, Word):
-            return self.word == other.word
-        else:
-            return NotImplemented
-    
-    def __lt__(self, other):
-        if isinstance(other, Word):
-            return self.word < other.word
-        else:
-            return NotImplemented
-    
-    def __str__(self):
-        """Returns str form of Word."""
-        return self.word
-
-    def __repr__(self):
-        return self.__str__()
 
 def main():
     for word in ('honour', 'decode', 'decoded', 'oiseau', 'mathematical',

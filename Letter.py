@@ -16,51 +16,22 @@
 
 import logging
 import sys
-from functools import *
 
-@total_ordering
-class Letter(object):
-    """Represents a letter."""
+from BasicText import BasicText
+
+
+class Letter(BasicText):
+    """Represents a Letter."""
     consonants = ["bcdfghjklmnpqrstvxzwy"]
     
-    def __init__(self, letter):
+    def __init__(self, text):
         """Initializes a Letter."""
-        assert isinstance(letter, str)
-        self.letter = letter
-    
+        super( Letter, self ).__init__(text)
+        
     def isVowel(self):
         """Determines if a Letter is a vowel."""
-        return self.letter.lower() not in consonants
+        return self.text.lower() not in consonants
     
     def isConsonant(self):
         """Determines if a Letter is a consonant."""
-        consonants = ["bcdfghjklmnpqrstvxzwy"]
-        return self.letter.lower() in consonants
-    
-    def count(self, string):
-        return self.letter.count(string)
-    
-    def __hash__(self):
-        return hash(self.letter)
-    
-    def __eq__(self, other):
-        if isinstance(other, Letter):
-            return self.letter == other.letter
-        else:
-            return NotImplemented
-    
-    def __lt__(self, other):
-        if isinstance(other, Letter):
-            return self.letter < other.letter
-        else:
-            return NotImplemented
-
-    def __str__(self):
-        """Returns str form of Letter."""
-        return self.letter
-
-    def __repr__(self):
-        return self.__str__()
-
-if __name__== "__main__":
-    main()
+        return self.text.lower() in consonants

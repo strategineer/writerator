@@ -18,17 +18,25 @@ import logging
 import os
 import io
 import sys
-
 from collections import Counter
-from Word import Word
 
-class Text(object):
+from BasicText import BasicText
+from Phrase import Phrase
+from Word import Word
+from Letter import Letter
+
+
+class Text(BasicText):
     """Represents a human language text."""
     
     #Represents the kind of sequences of characters able to be analyzed
     # w for words, l for letters
     types_of_sequences = ['w', 'l', 'p']
     
+    def __init__(self, filename):
+        """Initializes a Text."""
+        super( Text, self ).__init__(Text.get_text_from_txt_file(filename))
+
     def clean_splitted_text(str_sequences):
         # Clean up sequences. Remove whitespace, remove punctuation
         str_sequences = [x.rstrip(".,").strip() for x in str_sequences]
@@ -36,19 +44,15 @@ class Text(object):
         str_sequences = filter(None, str_sequences)
         
         return str_sequences
-    
-    def __init__(self, filename):
-        """Initializes a Text."""
-        self.load_from_txt_file(filename)
 
-    def load_from_txt_file(self, filename_in):
-        """Loads more text from a plain text file into a Text object."""
+    def get_text_from_txt_file(filename_in):
+        """Rips the text from a plain text file as a str."""
         if os.path.isfile(filename_in):
             with io.open(filename_in, 'r') as file:
                 lines = file.readlines()
             
-            lines = map(lambda line: line.strip(), lines)
-            self.text = " ".join(lines)
+            lines = [x.strip() for x in lines]
+            return " ".join(lines)
 
         else:
             logging.error("No such filename: " + filename_in)
@@ -63,7 +67,6 @@ class Text(object):
         """
         logging.debug("Entering Text.split_text_by_sequence ...")
         if kind in Text.types_of_sequences:
-            kind_class = None
             if kind == 'w':
                 split_text = self.text.split(" ")
                 
@@ -103,7 +106,7 @@ class Text(object):
         if kind in Text.types_of_sequences:
             sequences = self.split_text_by_sequence(kind)
             
-            occurences = Counter( map(lambda sequence: str(sequence) ,sequences) )
+            occurences = Counter( [str(sequence) for sequence in sequences] )
             
             return occurences.most_common()[:number_of_words_to_display]
         
@@ -144,11 +147,6 @@ class Text(object):
                 adverbs.append(word)
         
         return adverbs
-    
-    def __str__(self):
-        """Returns str form of Text"""
-        return self.text
-
     
     def __repr__(self):
         return self.__str__()

@@ -16,41 +16,17 @@
 
 import logging
 import sys
-from functools import *
 
-@total_ordering
-class Phrase(object):
+from BasicText import BasicText
+
+
+class Phrase(BasicText):
     """Represents a Phrase."""
-
-    def __init__(self, phrase):
+    
+    def __init__(self, text):
         """Initializes a Phrase."""
-        assert isinstance(phrase, str)
-        self.phrase = phrase
-    
-    def count(self, string):
-        return self.phrase.count(string)
-    
-    def __hash__(self):
-        return hash(self.phrase)
-    
-    def __eq__(self, other):
-        if isinstance(other, Phrase):
-            return self.phrase == other.phrase
-        else:
-            return NotImplemented
-    
-    def __lt__(self, other):
-        if isinstance(other, Phrase):
-            return self.phrase < other.phrase
-        else:
-            return NotImplemented
-        
-    def __str__(self):
-        """Returns str form of Phrase"""
-        return self.phrase
+        super( Phrase, self ).__init__(text)
 
-    def __repr__(self):
-        return self.__str__()
 
 def main():
     test = Phrase("Bill is cool.")
