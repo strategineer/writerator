@@ -37,7 +37,7 @@ class Text(BasicText):
         """Initializes a Text."""
         super( Text, self ).__init__(Text.get_text_from_txt_file(filename))
 
-    def clean_elements(elements):
+    def _clean_elements(elements):
         """
             Cleans a list of elements by removing unnecessary punctuation,
             whitespace from each element and returns the result.
@@ -62,28 +62,28 @@ class Text(BasicText):
             logging.error("No such filename: " + filename_in)
             sys.exit(0)
     
-    def parse_phrases(self):
+    def _parse_phrases(self):
         """Parses a Text and returns a list containing the phrases as Phrases"""
         phrases = self.text.split(".")
             
-        phrases = Text.clean_elements(phrases)
+        phrases = Text._clean_elements(phrases)
         return [Phrase(phrase) for phrase in phrase]
     
-    def parse_words(self):
+    def _parse_words(self):
         """Parses a Text and returns a list containing the words as Words"""
         words = self.text.split(" ")
         
-        words = Text.clean_elements(words)
+        words = Text._clean_elements(words)
         return [Word(word) for word in words]
     
-    def parse_letters(self):
+    def _parse_letters(self):
         """Parses a Text and returns a list containing the letters as Letters"""
         letters = list(self.text)
         
-        letters = Text.clean_elements(letters)
+        letters = Text._clean_elements(letters)
         return [Letter(letter) for letter in letters]
     
-    def split_text_by_element(self, kind=types_of_elements[0]):
+    def _split_text_by_element(self, kind=types_of_elements[0]):
         """
             Splits the text by element and returns a list
             
@@ -93,13 +93,13 @@ class Text(BasicText):
         """
         if kind in Text.types_of_elements:
             if kind == 'w':
-                return self.parse_words()
+                return self._parse_words()
             
             elif kind == 'p':
-                return self.parse_phrases()
+                return self._parse_phrases()
 
             elif kind == 'l':
-                return self.parse_letters()
+                return self._parse_letters()
         
         else:
             logging.error("No such type available cannot split: " + kind)
@@ -115,7 +115,7 @@ class Text(BasicText):
             The list is sorted by number of occurences in decreasing order.
         """
         if kind in Text.types_of_elements:
-            elements = self.split_text_by_element(kind)
+            elements = self._split_text_by_element(kind)
             
             occurences = Counter( [str(x) for x in elements] )
             
@@ -136,7 +136,7 @@ class Text(BasicText):
             The list is sorted by number of matches in decreasing order.
         """
         if kind in Text.types_of_elements:
-            elements = self.split_text_by_element(kind)
+            elements = self._split_text_by_element(kind)
             set_of_elements = set(elements)
             
             ranked_by_matches = []
