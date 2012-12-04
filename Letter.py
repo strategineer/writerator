@@ -16,7 +16,9 @@
 
 import logging
 import sys
+from functools import *
 
+@total_ordering
 class Letter(object):
     """Represents a letter."""
     consonants = ["bcdfghjklmnpqrstvxzwy"]
@@ -35,6 +37,24 @@ class Letter(object):
         consonants = ["bcdfghjklmnpqrstvxzwy"]
         return self.letter.lower() in consonants
     
+    def count(self, string):
+        return self.letter.count(string)
+    
+    def __hash__(self):
+        return hash(repr(self))
+    
+    def __eq__(self, other):
+        if isinstance(other, Letter):
+            return self.letter == other.letter
+        else:
+            return NotImplemented
+    
+    def __lt__(self, other):
+        if isinstance(other, Letter):
+            return self.letter < other.letter
+        else:
+            return NotImplemented
+
     def __str__(self):
         """Returns str form of Letter."""
         return self.letter

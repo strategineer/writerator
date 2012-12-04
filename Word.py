@@ -17,7 +17,9 @@
 import logging
 import sys
 import re
+from functools import *
 
+@total_ordering
 class Word(object):
     """Represents a Word."""
     
@@ -72,6 +74,24 @@ class Word(object):
             return True
         else:
             return False
+    
+    def count(self, string):
+        return self.word.count(string)
+    
+    def __hash__(self):
+        return hash(repr(self))
+    
+    def __eq__(self, other):
+        if isinstance(other, Word):
+            return self.word == other.word
+        else:
+            return NotImplemented
+    
+    def __lt__(self, other):
+        if isinstance(other, Word):
+            return self.word < other.word
+        else:
+            return NotImplemented
     
     def __str__(self):
         """Returns str form of Word."""

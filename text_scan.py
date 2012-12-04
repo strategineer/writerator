@@ -79,19 +79,19 @@ def main():
     
     if args.totalcount or args.matches:
         if args.totalcount:
-            ranked_words = text.rank_by_total_count(args.number_to_display, args.type)
+            ranked_sequences = text.rank_by_total_count(args.number_to_display, args.type)
         
         elif args.matches:
-            ranked_words = text.rank_by_number_of_matches(args.matches, args.number_to_display, args.type)
+            ranked_sequences = text.rank_by_number_of_matches(args.matches, args.number_to_display, args.type)
 
-        for word in ranked_words:
-            print(word)
+        for sequence in ranked_sequences:
+            print(str(sequence))
             print("\n")
 
 if __name__== "__main__":
-    main()
-    #
-    #cProfile.run("main()", "main_stats.prof")
-    #
-    #p = pstats.Stats('main_stats.prof')
-    #p.strip_dirs().sort_stats('time').print_stats(5)
+    #main()
+    
+    cProfile.run("main()", "main_stats.prof")
+    
+    p = pstats.Stats('main_stats.prof')
+    p.strip_dirs().sort_stats('time').print_stats(5)
