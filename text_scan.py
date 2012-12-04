@@ -29,24 +29,34 @@ def main():
                                      containing text written in human languages
                                      and computes information such as the most
                                      common words used, the Gunning-Fog Index,
-                                     the word count and more. text-scanner""")
+                                     the word count and more.""")
     
     #Required arguments
     parser.add_argument("file_in", help="filename of input file")
         
     parser.add_argument("type",
                        help="""chooses the sequence of characters to analyze.
-                       Either: w for words, l for letters""",
-                       choices=['w', 'l'])
+                       Either: w for words, l for letters and p for phrases.""",
+                       choices=['w', 'l', 'p'])
+    
+    parser.add_argument("number_to_display", type=int,
+                        help="""chooses the number of sequences to display."""
+                        )
     
     
     #Optional arguments
-    parser.add_argument("-d", "--debug", help="displays logging debug messages",
+    parser.add_argument("-d", "--debug", help="displays logging debug messages.",
                 action="store_true")
     
-    parser.add_argument("-r", "--rank", type=int, metavar="NUMBER",
-                   help="""counts the total occurences of each word and ranks
-                   them""")
+    group = parser.add_mutually_exclusive_group()
+    
+    group.add_argument("-o", "--occurences",
+                   help="""ranks each sequence by the times they occur in the
+                   text.""", action="store_true")
+    
+    group.add_argument("-m", "--matches", type=str, metavar="REGEX",
+                       help="""ranks the sequences by the amount of matches they
+                       have.""")
 
     args = parser.parse_args()
     
@@ -64,11 +74,15 @@ def main():
     
     text = Text(filename_in)
     
-    if args.rank:
-        ranked_words = text.rank_by_occurences(args.type)
+    if args.occurences or args.matches:
+        if args.occurences:
+            ranked_words = text.rank_by_occurences(args.number_to_display, args.type)
+        
+        elif args.matches:
+            ranked_words = text.rank_by_number_of_matches(args.matches, args.number_to_display, args.type)
 
-        for i in range(0, args.rank):
-            print(ranked_words[i])
+        for word in ranked_words:
+            print(word)
             print("\n")
 
 if __name__== "__main__":

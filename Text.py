@@ -18,6 +18,7 @@ import logging
 import os
 import io
 import sys
+import re
 
 from collections import Counter
 
@@ -26,7 +27,7 @@ class Text(object):
     
     #Represents the kind of sequences of characters able to be analyzed
     # w for words, l for letters
-    types_of_sequences = ['w', 'l']
+    types_of_sequences = ['w', 'l', 'p']
 
     def __init__(self, filename=None):
         """Initializes a Text."""
@@ -34,56 +35,96 @@ class Text(object):
         
         if filename:
             self.load_from_txt_file(filename)
-    
-    #Loads the text from a .txt file
+
     def load_from_txt_file(self, filename_in):
-        
+        """Loads more text from a plain text file into a Text object."""
         if os.path.isfile(filename_in):
             with io.open(filename_in, 'r') as file:
                 lines = file.readlines()
             
-            self.text = " ".join(lines)
+            lines = map(lambda line: line.strip(), lines)
+            self.text += " ".join(lines)
 
         else:
             logging.error("No such filename: " + filename_in)
             sys.exit(0)
 
-    #Splits the text by sequence and returns a list
-    # i.e. "Bill is cool" => words (w) => ["Bill", "is", "cool"]
-    # "Bill is cool" => letters (l) => ["B", "i", "l", "l", "i", "s", ...]
     def split_text_by_sequence(self, kind=types_of_sequences[0]):
-        
+        """
+            Splits the text by sequence and returns a list
+            
+            i.e. "Bill. Is. Cool." => words (w) => ["Bill.", "is.", "cool."]
+            "Bill is cool" => letters (l) => ["B", "i", "l", "l", "i", "s", ...]
+        """
         if kind in Text.types_of_sequences:
             if kind == 'w':
-                split_text = self.text.split(" ") 
+                split_text = self.text.split(" ")
+            
+            elif kind == 'p':
+                split_text = self.text.split(".")
+
             elif kind == 'l':
                 split_text = list(self.text)
             
-            split_text = filter(lambda sequence: sequence.strip(), split_text)
+            # Clean up sequences. Remove whitespace, remove punctuation
+            split_text = map(lambda sequence: sequence.rstrip(".,").strip(), split_text)
             
+            # Removes empty string
+            split_text = filter(None, split_text)
             return split_text
         
         else:
-            logging.error("No such type available cannot rank: " + kind)
+            logging.error("No such type available cannot split: " + kind)
             logging.error("try: " + str(Text.types_of_sequences))
-            sys.exit(0)
-            
-    # Returns a list containing the words (w) or letters (l) within a text ranked
-    # by the number of occurences from largest to smallest
-    def rank_by_occurences(self, kind=types_of_sequences[0]):
+            sys.exit(0)  
+
+    def rank_by_occurences(self, number_of_words_to_display, kind=types_of_sequences[0]):
+        """
+            Returns a list containing the words (w), letters (l) or phrases (p)
+            within a text ranked by the number of occurences from largest to
+            smallest.
+        """
+
         if kind in Text.types_of_sequences:
             sequences = self.split_text_by_sequence(kind)
             
             occurences = Counter(sequences)
             
-            return occurences.most_common()
+            return occurences.most_common()[:number_of_words_to_display]
         
         else:
-            logging.error("No such type available cannot rank: " + kind)
+            logging.error("No such type available cannot rank by occurrences: "
+                          + kind)
             logging.error("try: " + str(Text.types_of_sequences))
             sys.exit(0)
-
-
+    
+    def rank_by_number_of_matches(self, sequence_to_match, number_of_words_to_display, kind=types_of_sequences[0]):
+        
+        if kind in Text.types_of_sequences:
+            sequences = self.split_text_by_sequence(kind)
+            set_of_sequences = set(sequences)
+            
+            #Keeps list always sorted
+            ranked_by_matches = []
+            
+            for sequence in set_of_sequences:
+                matches = re.findall(sequence_to_match, sequence)
+                ranked_by_matches.append( (sequence, len(matches)) )
+            
+            ranked_by_matches.sort(key=lambda x: x[1])
+            
+            return ranked_by_matches[-number_of_words_to_display:][::-1]
+        
+        else:
+            logging.error("No such type available cannot rank by matches: " + kind)
+            logging.error("try: " + str(Text.types_of_sequences))
+            sys.exit(0)
+    
+    def find_all_adverbs(self):
+        """Finds all the adverbs in the text."""
+        adverbs = re.findall(r"\w+ly", self.text)
+        return adverbs
+    
     def __str__(self):
         """Prints out the text"""
         
