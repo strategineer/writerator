@@ -31,7 +31,7 @@ class Text(BasicText):
     
     # Represents the kinds of elements contained within texts, namely words (w),
     # letters(l), phrases(p)
-    types_of_elements = ['w', 'l', 'p']
+    _types_of_elements = ['w', 'l', 'p']
     
     def __init__(self, filename):
         """Initializes a Text."""
