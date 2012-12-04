@@ -83,7 +83,7 @@ class Text(BasicText):
         letters = Text._clean_elements(letters)
         return [Letter(letter) for letter in letters]
     
-    def _split_text_by_element(self, kind=types_of_elements[0]):
+    def _split_text_by_element(self, kind=_types_of_elements[0]):
         """
             Splits the text by element and returns a list
             
@@ -91,7 +91,7 @@ class Text(BasicText):
             "Bill. Is. cool." => letters (l) => ["B", "i", "l", "l", "I", "s", ...]
             "Bill. Is very. cool." => phrases (p) => ["Bill", "Is very", "Cool"]
         """
-        if kind in Text.types_of_elements:
+        if kind in Text._types_of_elements:
             if kind == 'w':
                 return self._parse_words()
             
@@ -103,10 +103,10 @@ class Text(BasicText):
         
         else:
             logging.error("No such type available cannot split: " + kind)
-            logging.error("try: " + str(Text.types_of_elements))
+            logging.error("try: " + str(Text._types_of_elements))
             sys.exit(0)
         
-    def rank_by_total_count(self, kind=types_of_elements[0]):
+    def rank_by_total_count(self, kind=_types_of_elements[0]):
         """
             Returns a list of tuples containing the number of occurrences of each
             element [words (w), letters (l) or phrases (p)] found in the Text and
@@ -114,7 +114,7 @@ class Text(BasicText):
             
             The list is sorted by number of occurences in decreasing order.
         """
-        if kind in Text.types_of_elements:
+        if kind in Text._types_of_elements:
             elements = self._split_text_by_element(kind)
             
             occurences = Counter( [str(x) for x in elements] )
@@ -124,10 +124,10 @@ class Text(BasicText):
         else:
             logging.error("No such type available cannot rank by occurrences: "
                           + kind)
-            logging.error("try: " + str(Text.types_of_elements))
+            logging.error("try: " + str(Text._types_of_elements))
             sys.exit(0)
     
-    def rank_by_number_of_matches(self, string_to_match, kind=types_of_elements[0]):
+    def rank_by_number_of_matches(self, string_to_match, kind=_types_of_elements[0]):
         """
             Returns a list of tuples containing the number of matches found in
             each element [words (w), letters (l) or phrases (p)] of the Text and
@@ -135,7 +135,7 @@ class Text(BasicText):
             
             The list is sorted by number of matches in decreasing order.
         """
-        if kind in Text.types_of_elements:
+        if kind in Text._types_of_elements:
             elements = self._split_text_by_element(kind)
             set_of_elements = set(elements)
             
@@ -150,7 +150,7 @@ class Text(BasicText):
         
         else:
             logging.error("No such type available cannot rank by matches: " + kind)
-            logging.error("try: " + str(Text.types_of_elements))
+            logging.error("try: " + str(Text._types_of_elements))
             sys.exit(0)
 
     def find_all_adverbs(self):
