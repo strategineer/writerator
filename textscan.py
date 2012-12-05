@@ -62,8 +62,9 @@ def make_parser():
                                         MATCH appears in the element.
                                         ATTENTION: Separate matches using ~
                                         
-                                        g
-                                        calculates the Gunning-Fog Index of a text
+                                        r test
+                                        calculates various readability tests.
+                                        choices for test: g for the Gunning-Fog Index
                                         """))
     
     #Required arguments
@@ -99,10 +100,9 @@ def get_filenames(filename_in):
     
     return (filename_in, filename_out)
 
-
 def get_output(text, options):
     operation_type = options[0]
-    operations = ['t', 'c', 'm', 'g']
+    operations = ['t', 'c', 'm', 'r']
     
     if operation_type in operations:
         if operation_type == 'c':
@@ -110,8 +110,9 @@ def get_output(text, options):
             
             return get_count_output(text, element_type, element_to_count)
             
-        elif operation_type == 'g':
-            return get_Gunning_output(text)
+        elif operation_type == 'r':
+            test = get_args(operation_type, options)
+            return get_readability_test_output(text, test)
             
         elif (operation_type == 't') or (operation_type == 'm'):
             if operation_type == 't':
@@ -137,6 +138,10 @@ def get_args(operation_type, args):
         assert len(args) == 3
         return (args[1], args[2])
     
+    elif operation_type == 'r':
+        assert len(args) == 2
+        return args[1]
+    
     elif operation_type == 't':
         assert len(args) == 3
         return (args[1], int(args[2]))
@@ -145,6 +150,10 @@ def get_args(operation_type, args):
         assert len(args) == 4
         return (args[1], args[2], int(args[3]))
 
+def get_readability_test_output(text, test):
+    if test == 'g':
+        return get_Gunning_output(text)
+    
 def get_totalcount_output(text, element_type, number_to_display):
     ranked_elements = text.rank_by_total_count(element_type)
 
