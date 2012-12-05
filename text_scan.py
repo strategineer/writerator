@@ -57,10 +57,17 @@ def main():
                    help="""ranks each element by the times they occur in the
                    text as a whole.""", action="store_true")
     
+    group.add_argument("-c", "--count", type=str, metavar="ELEMENT",
+                       help="""count the number of times ELEMENT appears in the
+                       text.""")
+        
     group.add_argument("-m", "--matches", type=str, metavar="\"MATCH~MATCH~...\"",
                        help="""ranks the elements by the amount of times each
-                       MATCH appears in the element.""")
-
+                       MATCH appears in the element. ATTENTION: Seperate matches
+                       using ~ """)
+    
+    match_seperator = "~"
+    
     args = parser.parse_args()
     
     
@@ -77,11 +84,19 @@ def main():
     
     text = Text(filename_in)
     
+    if args.count:
+        print(text.count_occurences(args.count, args.type))
+        
     if args.totalcount or args.matches:
         if args.totalcount:
             ranked_elements = text.rank_by_total_count(args.type)
         
         elif args.matches:
+            if match_seperator in args.matches:
+                args.matches = args.matches.split(match_seperator)
+            else:
+                args.matches = [args.matches]
+            
             ranked_elements = text.rank_by_number_of_matches(args.matches, args.type)
         
         if len(ranked_elements) < args.number_to_display:

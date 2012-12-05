@@ -104,6 +104,20 @@ class Text(BasicText):
             logging.error("No such type available cannot split: " + kind)
             logging.error("try: " + str(Text._types_of_elements))
             sys.exit(0)
+    
+    def make_occurences_Counter(self, kind=_types_of_elements):
+        """Returns the number of times an element appears in a Text."""
+        elements = self._split_text_by_element(kind)    
+        return Counter( [str(x) for x in elements] )
+        
+    def count_occurences(self, element_to_count, kind=_types_of_elements[0]):
+        """Return the total number of times an element appears in a Text."""
+        occurences = self.make_occurences_Counter(kind)
+            
+        if element_to_count in occurences:
+            return occurences[element_to_count]
+        else:
+            return 0
         
     def rank_by_total_count(self, kind=_types_of_elements[0]):
         """
@@ -114,9 +128,7 @@ class Text(BasicText):
             The list is sorted by number of occurences in decreasing order.
         """
         if kind in Text._types_of_elements:
-            elements = self._split_text_by_element(kind)
-            
-            occurences = Counter( [str(x) for x in elements] )
+            occurences = self.make_occurences_Counter(kind)
             
             return occurences.most_common()
         
@@ -126,7 +138,7 @@ class Text(BasicText):
             logging.error("try: " + str(Text._types_of_elements))
             sys.exit(0)
     
-    def rank_by_number_of_matches(self, string_to_match, kind=_types_of_elements[0]):
+    def rank_by_number_of_matches(self, matches_to_check, kind=_types_of_elements[0]):
         """
             Returns a list of tuples containing the number of matches found in
             each element [words (w), letters (l) or phrases (p)] of the Text and
@@ -134,7 +146,7 @@ class Text(BasicText):
             
             The list is sorted by number of matches in decreasing order.
         """
-        assert isinstance(string_to_match, str)
+        assert isinstance(matches_to_check, list)
         
         if kind in Text._types_of_elements:
             elements = self._split_text_by_element(kind)
@@ -143,7 +155,12 @@ class Text(BasicText):
             ranked_by_matches = []
             
             for element in set_of_elements:
-                ranked_by_matches.append( (element, element.count(string_to_match) ) )
+                
+                current_element_count = 0
+                for match in matches_to_check:
+                    current_element_count += element.count(match)
+                
+                ranked_by_matches.append( (element, current_element_count ) )
 
             ranked_by_matches.sort(reverse=True, key=lambda x: x[1])
             
