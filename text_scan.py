@@ -18,6 +18,7 @@ import argparse
 import logging
 import sys
 import subprocess
+import io
 
 import cProfile
 import pstats
@@ -51,6 +52,10 @@ def main():
     parser.add_argument("-d", "--debug", help="displays logging debug messages.",
                 action="store_true")
     
+    parser.add_argument("-o", "--output",
+                        help="""writes output to a .txt file""",
+                        action="store_true")
+    
     group = parser.add_mutually_exclusive_group()
     
     group.add_argument("-t", "--totalcount",
@@ -81,13 +86,16 @@ def main():
     
     filename_in = args.file_in
     
+    (name, extension) = filename_in.split(".")
+    filename_out = name + "_out" + "." + extension
     
     text = Text(filename_in)
     
+    output_lines = []
     if args.count:
-        print(text.count_occurences(args.count, args.type))
+        output_lines.append(text.count_occurences(args.count, args.type))
         
-    if args.totalcount or args.matches:
+    elif args.totalcount or args.matches:
         if args.totalcount:
             ranked_elements = text.rank_by_total_count(args.type)
         
@@ -108,8 +116,16 @@ def main():
             (element, count) = ranked_elements[i]
             
             if count != 0:
-                print(str(count) + ": " + str(element))
-                print("\n")
+                output_lines.append(str(count) + ": " + str(element) + "\n")
+    
+    if args.output:
+        with io.open(filename_out, 'w') as file:
+            file.writelines(output_lines)
+    else:
+        for line in output_lines:
+            print(line)
+
+
 
 if __name__== "__main__":
     #main()
