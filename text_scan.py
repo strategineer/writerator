@@ -37,16 +37,32 @@ def main():
     
     #Required arguments
     parser.add_argument("file_in", help="filename of input file")
-        
-    parser.add_argument("type",
-                       help="""chooses the element of characters to analyze.
-                       Either: w for words, l for letters and p for phrases.""",
-                       choices=['w', 'l', 'p'])
     
-    parser.add_argument("number_to_display", type=int,
-                        help="""chooses the number of elements to display."""
+    parser.add_argument("option",  nargs='+',
+                        help="""
+                        
+                        choose which operation to perform on file_in.
+                        type = w or l or p => (words, letters, phrases)
+                        
+                        option choices:
+                        t type number_to_display:
+                        ranks each element by the times they occur in the
+                        text as a whole.
+                        
+                        c type element:
+                        count the number of times element appears in the
+                        text.
+                        
+                        m type match number_to_display:
+                        ranks the elements by the amount of times each
+                        MATCH appears in the element.
+                        ATTENTION: Seperate matches using ~ 
+                        """,
                         )
+    operations = ['t', 'c', 'm']
+    element_types = ['w', 'l', 'p']
     
+    match_seperator = "~"
     
     #Optional arguments
     parser.add_argument("-d", "--debug", help="displays logging debug messages.",
@@ -56,26 +72,7 @@ def main():
                         help="""writes output to a .txt file""",
                         action="store_true")
     
-    group = parser.add_mutually_exclusive_group()
-    
-    group.add_argument("-t", "--totalcount",
-                   help="""ranks each element by the times they occur in the
-                   text as a whole.""", action="store_true")
-    
-    group.add_argument("-c", "--count", type=str, metavar="ELEMENT",
-                       help="""count the number of times ELEMENT appears in the
-                       text.""")
-        
-    group.add_argument("-m", "--matches", type=str, metavar="\"MATCH~MATCH~...\"",
-                       help="""ranks the elements by the amount of times each
-                       MATCH appears in the element. ATTENTION: Seperate matches
-                       using ~ """)
-    
-    match_seperator = "~"
-    
     args = parser.parse_args()
-    
-    
     
     #Set logging level
     if args.debug:
@@ -92,31 +89,56 @@ def main():
     text = Text(filename_in)
     
     output_lines = []
-    if args.count:
-        output_lines.append(text.count_occurences(args.count, args.type))
+    
+    operation_type = str(args.option[0])
+    
+    
+    #CLEAN UP THIS MEGA IF STATEMENT, CUT UP INTO MANY METHODS
+    
+    
+    
+    if operation_type in operations:
+        if operation_type == 'c':
+            assert len(args.option) == 3
+            element_type = str(args.option[1])
+            
+            element_to_count = str(args.option[2])
+            
+            output_lines.append(text.count_occurences(element_to_count, element_type))
         
-    elif args.totalcount or args.matches:
-        if args.totalcount:
-            ranked_elements = text.rank_by_total_count(args.type)
-        
-        elif args.matches:
-            if match_seperator in args.matches:
-                args.matches = args.matches.split(match_seperator)
+        elif (operation_type == 't') or (operation_type == 'm'):
+            if operation_type == 't':
+                assert len(args.option) == 3
+                element_type = str(args.option[1])
+                
+                number_to_display = int(args.option[2])
+                
+                ranked_elements = text.rank_by_total_count(element_type)
+                
+            elif operation_type == 'm':
+                assert len(args.option) == 4
+                element_type = str(args.option[1])
+                
+                elements_to_match = str(args.option[2])
+                number_to_display = int(args.option[3])
+                
+                if match_seperator in elements_to_match:
+                    elements_to_match = elements_to_match.split(match_seperator)
+                else:
+                    elements_to_match = [elements_to_match]
+                
+                ranked_elements = text.rank_by_number_of_matches( elements_to_match , element_type )
+
+            if len(ranked_elements) < number_to_display:
+                last_index = len(ranked_elements)
             else:
-                args.matches = [args.matches]
+                last_index = number_to_display
             
-            ranked_elements = text.rank_by_number_of_matches(args.matches, args.type)
-        
-        if len(ranked_elements) < args.number_to_display:
-            last_index = len(ranked_elements)
-        else:
-            last_index = args.number_to_display
-        
-        for i in range(0, last_index):
-            (element, count) = ranked_elements[i]
-            
-            if count != 0:
-                output_lines.append(str(count) + ": " + str(element) + "\n")
+            for i in range(0, last_index):
+                (element, count) = ranked_elements[i]
+                
+                if count != 0:
+                    output_lines.append(str(count) + ": " + str(element) + "\n")
     
     if args.output:
         with io.open(filename_out, 'w') as file:
