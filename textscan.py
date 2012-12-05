@@ -26,7 +26,25 @@ import pstats
 from texttools import Text
 
 
-def main():    
+def main():
+    parser = make_parser()
+    
+    args = parser.parse_args()
+    
+    set_logging_level(args.debug)
+    
+    (filename_in, filename_out) = get_filenames(args.file_in)
+    
+    text = Text(filename_in)
+    output_lines = get_output(text, args.option)
+    
+    if args.output:
+        output_to_file(filename_out, output_lines)
+    else:
+        output_to_console(output_lines)
+
+
+def make_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(
                                      """
@@ -42,7 +60,7 @@ def main():
                                         m type match number_to_display
                                         ranks the elements by the amount of times each
                                         MATCH appears in the element.
-                                        ATTENTION: Seperate matches using ~
+                                        ATTENTION: Separate matches using ~
                                         
                                         g
                                         calculates the Gunning-Fog Index of a text
@@ -56,7 +74,6 @@ def main():
                         type = w or c or p => (words, characters, phrases)
                         """
                         )
-    operations = ['t', 'c', 'm', 'g']
     
     #Optional arguments
     parser.add_argument("-d", "--debug", help="displays logging debug messages.",
@@ -66,61 +83,8 @@ def main():
                         help="""writes output to a .txt file""",
                         action="store_true")
     
-    args = parser.parse_args()
-    
-    set_logging_level(args.debug)
-    
-    (filename_in, filename_out) = get_in_out_filenames(args.file_in)
-    
-    text = Text(filename_in)
-        
-    output_lines = []
-    operation_type = args.option[0]
-    if operation_type in operations:
-        if operation_type == 'c':
-            (element_type, element_to_count) = get_args(operation_type, args.option)
-            
-            output_lines = get_count_output(text, element_type, element_to_count)
-            
-        elif operation_type == 'g':
-            output_lines = get_Gunning_output(text)
-            
-        elif (operation_type == 't') or (operation_type == 'm'):
-            if operation_type == 't':
-                (element_type, number_to_display) = get_args(operation_type,
-                                                             args.option)
-                
-                output_lines = get_totalcount_output(text, element_type,
-                                                     number_to_display)
-                
-            elif operation_type == 'm':
-                (element_type,
-                 elements_to_match,
-                 number_to_display) = get_args(operation_type, args.option)
-                
-                output_lines = get_match_output(text, element_type,
-                                                elements_to_match,
-                                                number_to_display)
-        
-        else:
-            logging.error("No such operation type: " + operation_type)
-            sys.exit(0)
-    
-    if args.output:
-        output_to_file(filename_out, output_lines)
-    else:
-        output_to_console(output_lines)
+    return parser
 
-def get_Gunning_output(text):
-    return [text.calculate_Gunning_Fog_Index()]
-
-def get_in_out_filenames(filename_in):
-    
-    (name, extension) = filename_in.split(".")
-    filename_out = name + "_out" + "." + extension
-    
-    return (filename_in, filename_out)
-    
 def set_logging_level(bool_option):
     if bool_option:
         logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -128,11 +92,58 @@ def set_logging_level(bool_option):
     else:
         logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 
-def get_last_index_for_output(ranked_elements, number_to_display):
-    if len(ranked_elements) < number_to_display:
-        return len(ranked_elements)
-    else:
-        return number_to_display
+def get_filenames(filename_in):
+    
+    (name, extension) = filename_in.split(".")
+    filename_out = name + "_out" + "." + extension
+    
+    return (filename_in, filename_out)
+
+
+def get_output(text, options):
+    operation_type = options[0]
+    operations = ['t', 'c', 'm', 'g']
+    
+    if operation_type in operations:
+        if operation_type == 'c':
+            (element_type, element_to_count) = get_args(operation_type, options)
+            
+            return get_count_output(text, element_type, element_to_count)
+            
+        elif operation_type == 'g':
+            return get_Gunning_output(text)
+            
+        elif (operation_type == 't') or (operation_type == 'm'):
+            if operation_type == 't':
+                (element_type, number_to_display) = get_args(operation_type,
+                                                             options)
+                
+                return get_totalcount_output(text, element_type, number_to_display)
+                
+            elif operation_type == 'm':
+                (element_type,
+                 elements_to_match,
+                 number_to_display) = get_args(operation_type, options)
+                
+                return get_match_output(text, element_type, elements_to_match, 
+                                        number_to_display)
+        
+        else:
+            logging.error("No such operation type: " + operation_type)
+            sys.exit(0)
+
+def get_args(operation_type, args):
+    if operation_type == 'c':
+        assert len(args) == 3
+        return (args[1], args[2])
+    
+    elif operation_type == 't':
+        assert len(args) == 3
+        return (args[1], int(args[2]))
+    
+    elif operation_type ==  'm':
+        assert len(args) == 4
+        return (args[1], args[2], int(args[3]))
 
 def get_totalcount_output(text, element_type, number_to_display):
     ranked_elements = text.rank_by_total_count(element_type)
@@ -157,6 +168,12 @@ def get_match_output(text, element_type, elements_to_match, number_to_display):
     
     return generate_ranked_list_output(ranked_elements, number_to_display)
 
+def get_last_index_for_output(ranked_elements, number_to_display):
+    if len(ranked_elements) < number_to_display:
+        return len(ranked_elements)
+    else:
+        return number_to_display
+
 def generate_ranked_list_output(rank_list, number_to_show):
     
     last_index = get_last_index_for_output(rank_list, number_to_show)
@@ -170,6 +187,10 @@ def generate_ranked_list_output(rank_list, number_to_show):
     
     return output_lines
 
+def get_Gunning_output(text):
+    return [text.calculate_Gunning_Fog_Index()]
+
+
 def output_to_console(output_lines):
     for line in output_lines:
         print(line)
@@ -177,20 +198,6 @@ def output_to_console(output_lines):
 def output_to_file(filename, output_lines):
     with io.open(filename, 'w') as file:
         file.writelines(output_lines)
-
-def get_args(operation_type, args):
-    if operation_type == 'c':
-        assert len(args) == 3
-        return (args[1], args[2])
-    
-    elif operation_type == 't':
-        assert len(args) == 3
-        return (args[1], int(args[2]))
-    
-    elif operation_type ==  'm':
-        assert len(args) == 4
-        return (args[1], args[2], int(args[3]))
-
 
 if __name__== "__main__":
         main()
