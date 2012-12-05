@@ -1,7 +1,15 @@
 text-scanner
 ============
 
-text-scanner is an application (GUI and command line)  which scans through text files containing text written in human languages and computes information such as the most common words used, the Gunning-Fog Index, the word count and more. text-scanner is meant to be used by people who wish to know more about the texts they read and write in order to improve their writing ability and perhaps help others as well.
+text-scanner is a command line application which analyzes plain text files containing english language writing.
+
+It grants the curious user with many tools to find specific information about their texts such as number of times "I" appears or the words in a text sorted by how many times "e" appears in them.
+
+It also allows "get the job done" type of users to retrieve more general information such as the most common words used, the Gunning-Fog index, the word count and many more.
+
+If you like enjoy writing and programming then you should give text-scanner a shot!
+
+Coming Soon: A Haiku Generator and a Poem Syllable/Meter Checker
 
 
 Copyright 2012 Bill Tyros
