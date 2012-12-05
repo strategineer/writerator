@@ -1,7 +1,7 @@
 text-scanner
 ============
 
-text-scanner is a command line application which analyzes plain text files containing english language writing.
+text-scanner is a command line application which analyzes plain text files containing english language writing and acquires information about them. It can also analyze a text and build new texts from the source material, such as haikus and poems.
 
 It grants the curious user with many tools to find specific information about their texts such as number of times "I" appears or the words in a text sorted by how many times "e" appears in them.
 
