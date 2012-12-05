@@ -19,50 +19,45 @@ import logging
 import sys
 import subprocess
 import io
+import textwrap
 
 import cProfile
 import pstats
 
-from Text import Text
+import texttools
 
 def main():
     #Runs Unit-Tests
     #subprocess.call("python Text_test.py -q")
     
-    parser = argparse.ArgumentParser(description="""scans through text files
-                                     containing text written in human languages
-                                     and computes information such as the most
-                                     common words used, the Gunning-Fog Index,
-                                     the word count and more.""")
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=textwrap.dedent(
+                                     """
+                                        option choices:
+                                        t type number_to_display:
+                                        ranks each element by the times they occur in the
+                                        text as a whole.
+                                        
+                                        c type element:
+                                        count the number of times element appears in the
+                                        text.
+                                        
+                                        m type match number_to_display:
+                                        ranks the elements by the amount of times each
+                                        MATCH appears in the element.
+                                        ATTENTION: Seperate matches using ~
+                                        """))
     
     #Required arguments
     parser.add_argument("file_in", help="filename of input file")
     
     parser.add_argument("option",  nargs='+',
                         help="""
-                        
-                        choose which operation to perform on file_in.
-                        type = w or l or p => (words, letters, phrases)
-                        
-                        option choices:
-                        t type number_to_display:
-                        ranks each element by the times they occur in the
-                        text as a whole.
-                        
-                        c type element:
-                        count the number of times element appears in the
-                        text.
-                        
-                        m type match number_to_display:
-                        ranks the elements by the amount of times each
-                        MATCH appears in the element.
-                        ATTENTION: Seperate matches using ~ 
-                        """,
+                        type = w or c or p => (words, characters, phrases)
+                        """
                         )
     operations = ['t', 'c', 'm']
     element_types = ['w', 'l', 'p']
-    
-    match_seperator = "~"
     
     #Optional arguments
     parser.add_argument("-d", "--debug", help="displays logging debug messages.",
@@ -86,67 +81,111 @@ def main():
     (name, extension) = filename_in.split(".")
     filename_out = name + "_out" + "." + extension
     
-    text = Text(filename_in)
+    text = texttools.Text(filename_in)
     
     output_lines = []
-    
-    operation_type = str(args.option[0])
-    
-    
-    #CLEAN UP THIS MEGA IF STATEMENT, CUT UP INTO MANY METHODS
-    
-    
-    
+    operation_type = args.option[0]
     if operation_type in operations:
         if operation_type == 'c':
-            assert len(args.option) == 3
-            element_type = str(args.option[1])
+            (element_type, element_to_count) = get_args(operation_type, args.option)
             
-            element_to_count = str(args.option[2])
+            output_lines = get_count_output(text, element_type, element_to_count)
             
-            output_lines.append(text.count_occurences(element_to_count, element_type))
-        
         elif (operation_type == 't') or (operation_type == 'm'):
             if operation_type == 't':
-                assert len(args.option) == 3
-                element_type = str(args.option[1])
+                (element_type, number_to_display) = get_args(operation_type,
+                                                             args.option)
                 
-                number_to_display = int(args.option[2])
-                
-                ranked_elements = text.rank_by_total_count(element_type)
+                output_lines = get_totalcount_output(text, element_type,
+                                                     number_to_display)
                 
             elif operation_type == 'm':
-                assert len(args.option) == 4
-                element_type = str(args.option[1])
+                (element_type,
+                 elements_to_match,
+                 number_to_display) = get_args(operation_type, args.option)
                 
-                elements_to_match = str(args.option[2])
-                number_to_display = int(args.option[3])
-                
-                if match_seperator in elements_to_match:
-                    elements_to_match = elements_to_match.split(match_seperator)
-                else:
-                    elements_to_match = [elements_to_match]
-                
-                ranked_elements = text.rank_by_number_of_matches( elements_to_match , element_type )
-
-            if len(ranked_elements) < number_to_display:
-                last_index = len(ranked_elements)
-            else:
-                last_index = number_to_display
-            
-            for i in range(0, last_index):
-                (element, count) = ranked_elements[i]
-                
-                if count != 0:
-                    output_lines.append(str(count) + ": " + str(element) + "\n")
+                output_lines = get_match_output(text, element_type,
+                                                elements_to_match,
+                                                number_to_display)
+        
+        else:
+            logging.error("No such operation type: " + operation_type)
+            sys.exit(0)
     
     if args.output:
-        with io.open(filename_out, 'w') as file:
-            file.writelines(output_lines)
+        output_to_file(filename_out, output_lines)
+    
     else:
-        for line in output_lines:
-            print(line)
+        output_to_console(output_lines)
 
+
+def get_last_index_for_output(ranked_elements, number_to_display):
+    if len(ranked_elements) < number_to_display:
+        return len(ranked_elements)
+    else:
+        return number_to_display
+
+def get_totalcount_output(text, element_type, number_to_display):
+    ranked_elements = text.rank_by_total_count(element_type)
+    
+    last_index = get_last_index_for_output(ranked_elements, number_to_display)
+    
+    output_lines = []
+    for i in range(0, last_index):
+        (element, count) = ranked_elements[i]
+        
+        if count != 0:
+            output_lines.append(str(count) + ": " + str(element) + "\n")
+    
+    return output_lines
+
+def get_match_output(text, element_type, elements_to_match, number_to_display):
+    match_seperator = "~"
+    
+    if match_seperator in elements_to_match:
+        elements_to_match = elements_to_match.split(match_seperator)
+    else:
+        elements_to_match = [elements_to_match]
+                
+    ranked_elements = text.rank_by_number_of_matches( elements_to_match , element_type )
+    
+    last_index = get_last_index_for_output(ranked_elements, number_to_display)
+    
+    output_lines = []
+    for i in range(0, last_index):
+        (element, count) = ranked_elements[i]
+        
+        if count != 0:
+            output_lines.append(str(count) + ": " + str(element) + "\n")
+    
+    return output_lines
+
+def get_count_output(text, element_type, element_to_count):
+    output = []
+    
+    output.append(text.count_occurences(element_to_count, element_type))
+    return output
+
+def output_to_console(output_lines):
+    for line in output_lines:
+        print(line)
+
+def output_to_file(filename, output_lines):
+    with io.open(filename, 'w') as file:
+        file.writelines(output_lines)
+
+def get_args(operation_type, args):
+    if operation_type == 'c':
+        assert len(args) == 3
+        return (args[1], args[2])
+    
+    elif operation_type == 't':
+        assert len(args) == 3
+        return (args[1], int(args[2]))
+    
+    elif operation_type ==  'm':
+        assert len(args) == 4
+        return (args[1], args[2], int(args[3]))
 
 
 if __name__== "__main__":
