@@ -27,6 +27,10 @@ class BasicText(object):
         assert isinstance(text, str)
         self.text = text
     
+    def isWhitespace(self):
+        """Determines if a BasicText contains only whitespace"""
+        return self.text.isspace()
+        
     def count(self, to_count):
         """Counts the number of times to_count appears in BasicText"""
         return self.text.count(to_count)
