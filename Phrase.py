@@ -25,7 +25,7 @@ class Phrase(BasicText):
     
     def __init__(self, text):
         """Initializes a Phrase."""
-        super( Phrase, self ).__init__(text)
+        super( Phrase, self ).__init__(text + ".")
 
 
 def main():
