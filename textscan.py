@@ -49,6 +49,10 @@ def make_parser():
                                      description=textwrap.dedent(
                                      """
                                         option choices:
+                                        p number
+                                        generates a certain number of haikus using the
+                                        words from the input text
+                                        
                                         t type number_to_display
                                         ranks each element by the times they occur in the
                                         text as a whole.
@@ -102,7 +106,7 @@ def get_filenames(filename_in):
 
 def get_output(text, options):
     operation_type = options[0]
-    operations = ['t', 'c', 'm', 'r']
+    operations = ['t', 'c', 'm', 'r', 'p']
     
     if operation_type in operations:
         if operation_type == 'c':
@@ -113,6 +117,11 @@ def get_output(text, options):
         elif operation_type == 'r':
             test = get_args(operation_type, options)
             return get_readability_test_output(text, test)
+        
+        elif operation_type == 'p':
+            number_to_generate = get_args(operation_type, options)
+            
+            return get_haiku_output(text, number_to_generate)
             
         elif (operation_type == 't') or (operation_type == 'm'):
             if operation_type == 't':
@@ -129,14 +138,18 @@ def get_output(text, options):
                 return get_match_output(text, element_type, elements_to_match, 
                                         number_to_display)
         
-        else:
-            logging.error("No such operation type: " + operation_type)
-            sys.exit(0)
+    else:
+        logging.error("No such operation type: " + operation_type)
+        sys.exit(0)
 
 def get_args(operation_type, args):
     if operation_type == 'c':
         assert len(args) == 3
         return (args[1], args[2])
+    
+    elif operation_type == 'p':
+        assert len(args) == 2
+        return args[1]
     
     elif operation_type == 'r':
         assert len(args) == 2
@@ -198,6 +211,18 @@ def generate_ranked_list_output(rank_list, number_to_show):
 
 def get_Gunning_output(text):
     return [text.calculate_Gunning_Fog_Index()]
+
+def get_haiku_output(text, number_to_generate):
+    output_lines = []
+    for i in range(0, int(number_to_generate)):
+        new_haiku = text.generate_haiku()
+        
+        for line in new_haiku:
+            output_lines.append(line + "\n")
+        
+        output_lines.append("\n")
+    
+    return output_lines
 
 
 def output_to_console(output_lines):

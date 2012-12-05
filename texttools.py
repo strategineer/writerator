@@ -15,9 +15,12 @@
 import logging
 import sys
 from functools import *
+
+
 import re
 import os
 import io
+import random
 from collections import Counter
 
 
@@ -202,8 +205,34 @@ class Text(BasicText):
     def __init__(self, filename):
         """Initializes a Text."""
         super( Text, self ).__init__(Text.get_text_from_txt_file(filename))
-
-
+    
+    def generate_poetry(self, number_of_lines, syllables_per_line):
+        pass
+    
+    def generate_haiku(self):
+        unique_words = list(set(self._parse_words()))
+        
+        lines = []
+        for line_number in range(0, 3):
+            if line_number == 0 or line_number == 2:
+                syllables_needed = 7
+            elif line_number == 1:
+                syllables_needed = 5
+            
+            is_done = False  
+            while not is_done:
+                random_words = []
+                for i in range(0, 3):
+                    random_words.append(random.choice(unique_words))
+                
+                syllable_count = sum([word.countSyllables() for word in random_words])
+                if syllable_count == syllables_needed:
+                    lines.append(" ".join([str(word) for word in random_words]).capitalize())
+                    is_done = True
+        
+        return lines
+            
+        
     def count_words(self):
         """Counts the number of words in a Text."""
         return len(self._parse_words(cast_as_objects=False))
