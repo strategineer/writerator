@@ -238,7 +238,8 @@ class Text(BasicText):
             sys.exit(0)
     
     def make_occurences_Counter(self, kind):
-        """Returns the number of times an element appears in a Text."""
+        """Returns a Counter with the elements decided by kind, either
+         words, characters or phrases as keys from within a Text."""
         elements = self._split_text_by_element(kind)    
         return Counter( [str(x) for x in elements] )
         
