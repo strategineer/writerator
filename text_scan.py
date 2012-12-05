@@ -38,12 +38,12 @@ def main():
     parser.add_argument("file_in", help="filename of input file")
         
     parser.add_argument("type",
-                       help="""chooses the sequence of characters to analyze.
+                       help="""chooses the element of characters to analyze.
                        Either: w for words, l for letters and p for phrases.""",
                        choices=['w', 'l', 'p'])
     
     parser.add_argument("number_to_display", type=int,
-                        help="""chooses the number of sequences to display."""
+                        help="""chooses the number of elements to display."""
                         )
     
     
@@ -54,12 +54,12 @@ def main():
     group = parser.add_mutually_exclusive_group()
     
     group.add_argument("-t", "--totalcount",
-                   help="""ranks each sequence by the times they occur in the
+                   help="""ranks each element by the times they occur in the
                    text as a whole.""", action="store_true")
     
-    group.add_argument("-m", "--matches", type=str, metavar="MATCH",
-                       help="""ranks the sequences by the amount of times MATCH
-                       appears in the sequence.""")
+    group.add_argument("-m", "--matches", type=str, metavar="\"MATCH~MATCH~...\"",
+                       help="""ranks the elements by the amount of times each
+                       MATCH appears in the element.""")
 
     args = parser.parse_args()
     
@@ -79,21 +79,21 @@ def main():
     
     if args.totalcount or args.matches:
         if args.totalcount:
-            ranked_sequences = text.rank_by_total_count(args.type)
+            ranked_elements = text.rank_by_total_count(args.type)
         
         elif args.matches:
-            ranked_sequences = text.rank_by_number_of_matches(args.matches, args.type)
+            ranked_elements = text.rank_by_number_of_matches(args.matches, args.type)
         
-        if len(ranked_sequences) < args.number_to_display:
-            last_index = len(ranked_sequences)
+        if len(ranked_elements) < args.number_to_display:
+            last_index = len(ranked_elements)
         else:
             last_index = args.number_to_display
         
         for i in range(0, last_index):
-            (sequence, count) = ranked_sequences[i]
+            (element, count) = ranked_elements[i]
             
             if count != 0:
-                print(str(count) + ": " + str(sequence))
+                print(str(count) + ": " + str(element))
                 print("\n")
 
 if __name__== "__main__":

@@ -40,11 +40,10 @@ class Text(BasicText):
     def _clean_elements(elements):
         """
             Cleans a list of elements by removing unnecessary punctuation,
-            whitespace from each element and returns the result.
+            whitespace from each element, removing the empty strings from the
+            list and returns the result.
         """
-        # Clean up elements. Remove whitespace, remove punctuation
         elements = [element.rstrip(".,").strip() for element in elements]
-        # Removes empty string
         elements = filter(None, elements)
         
         return elements
@@ -59,7 +58,7 @@ class Text(BasicText):
             return " ".join(lines)
 
         else:
-            logging.error("No such filename: " + filename_in)
+            logging.error("No such filename cannot get text: " + filename_in)
             sys.exit(0)
     
     def _parse_phrases(self):
@@ -135,6 +134,8 @@ class Text(BasicText):
             
             The list is sorted by number of matches in decreasing order.
         """
+        assert isinstance(string_to_match, str)
+        
         if kind in Text._types_of_elements:
             elements = self._split_text_by_element(kind)
             set_of_elements = set(elements)
