@@ -30,9 +30,16 @@ class BasicText(object):
         assert isinstance(text, str)
         self.text = text
     
-    def isWhitespace(self):
+    def isspace(self):
         """Determines if a BasicText contains only whitespace"""
         return self.text.isspace()
+    
+    def istitle(self):
+        """
+            Determines if a BasicText is a Title, i.e. each word
+            has first letter capitalized.
+        """
+        return self.text.istitle()
         
     def count(self, to_count):
         """Counts the number of times to_count appears in BasicText"""
@@ -165,7 +172,7 @@ class Text(BasicText):
             list and returns the result.
         """
         if kind == Text._types_of_elements[0]:
-            elements = [x.strip(",. ") for x in elements]
+            elements = [x.strip("(),. ") for x in elements]
         
         elif kind == Text._types_of_elements[1]:
             pass
@@ -177,6 +184,9 @@ class Text(BasicText):
             logging.error("No such element type, cannot clean elements.")
             sys.exit(0)
         
+        elements = list(filter(None, elements))
+        
+        assert "" not in elements
         return elements
     
     @staticmethod
@@ -303,6 +313,19 @@ class Text(BasicText):
             logging.error("No such type available cannot rank by matches: " + kind)
             logging.error("try: " + str(Text._types_of_elements))
             sys.exit(0)
+    
+    def calculate_Gunning_Fog_Index(self):
+        """Calculates and returns the text's Gunning-Fog index."""
+        words = self._split_text_by_element(Text._types_of_elements[0])
+        complex_words = [word for word in words if word.countSyllables() >= 3 and not word.istitle()]
+        sentences = self._split_text_by_element(Text._types_of_elements[2])
+        
+        number_of_words = len(words)
+        number_of_complex_words = len(complex_words)
+        number_of_sentences = len(sentences)
+        
+        return (0.4) * ( (number_of_words / number_of_sentences) 
+                         + 100 * (number_of_complex_words / number_of_words) )
 
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""

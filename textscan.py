@@ -14,38 +14,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+import io
 import logging
 import sys
-import subprocess
-import io
-import textwrap
 
+import argparse
+import textwrap
 import cProfile
 import pstats
 
-import texttools
+from texttools import Text
 
-def main():
-    #Runs Unit-Tests
-    #subprocess.call("python Text_test.py -q")
-    
+
+def main():    
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent(
                                      """
                                         option choices:
-                                        t type number_to_display:
+                                        t type number_to_display
                                         ranks each element by the times they occur in the
                                         text as a whole.
                                         
-                                        c type element:
+                                        c type element
                                         count the number of times element appears in the
                                         text.
                                         
-                                        m type match number_to_display:
+                                        m type match number_to_display
                                         ranks the elements by the amount of times each
                                         MATCH appears in the element.
                                         ATTENTION: Seperate matches using ~
+                                        
+                                        g
+                                        calculates the Gunning-Fog Index of a text
                                         """))
     
     #Required arguments
@@ -56,8 +56,7 @@ def main():
                         type = w or c or p => (words, characters, phrases)
                         """
                         )
-    operations = ['t', 'c', 'm']
-    element_types = ['w', 'l', 'p']
+    operations = ['t', 'c', 'm', 'g']
     
     #Optional arguments
     parser.add_argument("-d", "--debug", help="displays logging debug messages.",
@@ -69,20 +68,12 @@ def main():
     
     args = parser.parse_args()
     
-    #Set logging level
-    if args.debug:
-        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-    else:
-        logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
+    set_logging_level(args.debug)
     
+    (filename_in, filename_out) = get_in_out_filenames(args.file_in)
     
-    filename_in = args.file_in
-    
-    (name, extension) = filename_in.split(".")
-    filename_out = name + "_out" + "." + extension
-    
-    text = texttools.Text(filename_in)
-    
+    text = Text(filename_in)
+        
     output_lines = []
     operation_type = args.option[0]
     if operation_type in operations:
@@ -90,6 +81,9 @@ def main():
             (element_type, element_to_count) = get_args(operation_type, args.option)
             
             output_lines = get_count_output(text, element_type, element_to_count)
+            
+        elif operation_type == 'g':
+            output_lines = get_Gunning_output(text)
             
         elif (operation_type == 't') or (operation_type == 'm'):
             if operation_type == 't':
@@ -114,10 +108,25 @@ def main():
     
     if args.output:
         output_to_file(filename_out, output_lines)
-    
     else:
         output_to_console(output_lines)
 
+def get_Gunning_output(text):
+    return [text.calculate_Gunning_Fog_Index()]
+
+def get_in_out_filenames(filename_in):
+    
+    (name, extension) = filename_in.split(".")
+    filename_out = name + "_out" + "." + extension
+    
+    return (filename_in, filename_out)
+    
+def set_logging_level(bool_option):
+    if bool_option:
+        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+        
+    else:
+        logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 
 def get_last_index_for_output(ranked_elements, number_to_display):
     if len(ranked_elements) < number_to_display:
@@ -127,17 +136,14 @@ def get_last_index_for_output(ranked_elements, number_to_display):
 
 def get_totalcount_output(text, element_type, number_to_display):
     ranked_elements = text.rank_by_total_count(element_type)
+
+    return generate_ranked_list_output(ranked_elements, number_to_display)
+
+def get_count_output(text, element_type, element_to_count):
+    output = []
     
-    last_index = get_last_index_for_output(ranked_elements, number_to_display)
-    
-    output_lines = []
-    for i in range(0, last_index):
-        (element, count) = ranked_elements[i]
-        
-        if count != 0:
-            output_lines.append(str(count) + ": " + str(element) + "\n")
-    
-    return output_lines
+    output.append(text.count_occurences(element_to_count, element_type))
+    return output
 
 def get_match_output(text, element_type, elements_to_match, number_to_display):
     match_seperator = "~"
@@ -149,22 +155,20 @@ def get_match_output(text, element_type, elements_to_match, number_to_display):
                 
     ranked_elements = text.rank_by_number_of_matches( elements_to_match , element_type )
     
-    last_index = get_last_index_for_output(ranked_elements, number_to_display)
+    return generate_ranked_list_output(ranked_elements, number_to_display)
+
+def generate_ranked_list_output(rank_list, number_to_show):
+    
+    last_index = get_last_index_for_output(rank_list, number_to_show)
     
     output_lines = []
     for i in range(0, last_index):
-        (element, count) = ranked_elements[i]
+        (element, count) = rank_list[i]
         
         if count != 0:
             output_lines.append(str(count) + ": " + str(element) + "\n")
     
     return output_lines
-
-def get_count_output(text, element_type, element_to_count):
-    output = []
-    
-    output.append(text.count_occurences(element_to_count, element_type))
-    return output
 
 def output_to_console(output_lines):
     for line in output_lines:
@@ -189,9 +193,9 @@ def get_args(operation_type, args):
 
 
 if __name__== "__main__":
-    #main()
-    
-    cProfile.run("main()", "main_stats.prof")
-    
-    p = pstats.Stats('main_stats.prof')
-    p.strip_dirs().sort_stats('time').print_stats(5)
+        main()
+#               
+#        cProfile.run("main()", "main_stats.prof")
+#        
+#        p = pstats.Stats('main_stats.prof')
+#        p.strip_dirs().sort_stats('time').print_stats(5)
