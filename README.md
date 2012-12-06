@@ -3,11 +3,15 @@ text-scanner
 
 text-scanner is a command line application which analyzes plain text files containing english language writing and acquires information about them.
 
-text-scanner can randomly generate haikus using user-given words/input. Enough said. Too good.
+text-scanner can randomly generate haikus using user-given words/input.
+
+A wise computer once told me,
+
+"Peremptory personal,
+ Perpendiculars,
+ Forestry spreadsheets zaniest."
 
 If you enjoy writing and/or programming then you should give text-scanner a shot!
-
-
 
 
 Oh... You're still here. Ok.
