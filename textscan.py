@@ -79,7 +79,7 @@ def make_parser():
                                         TYPE: w for word, c for character, p for phrase
                                         
                                         ******************************************************************
-                                        m TYPE PATTERN~PATTERN~... NUMBER_TO_SHOW
+                                        m TYPE PATTERN1~PATTERN2~... NUMBER_TO_SHOW
                                         
                                         m: ranks the elements by the amount of times each
                                         PATTERN appears in the element.
