@@ -171,7 +171,7 @@ class Text(BasicText):
             list and returns the result.
         """
         if element_type == Text._types_of_elements[0]:
-            elements = [x.strip("(),. ") for x in elements]
+            elements = [x.strip("\"!(),. ") for x in elements]
         
         elif element_type == Text._types_of_elements[1]:
             pass
@@ -219,16 +219,22 @@ class Text(BasicText):
             elif line_number == 1:
                 syllables_needed = 5
             
-            is_done = False  
+            is_done = False
+            random_words = []
             while not is_done:
-                random_words = []
-                for i in range(0, 3):
-                    random_words.append(random.choice(unique_words))
+                random_words.append(random.choice(unique_words))
                 
                 syllable_count = sum([word.countSyllables() for word in random_words])
                 if syllable_count == syllables_needed:
                     lines.append(" ".join([str(word) for word in random_words]).capitalize())
                     is_done = True
+                
+                elif syllable_count < syllables_needed:
+                    pass
+                
+                elif syllable_count > syllables_needed:
+                    random_words = []
+                    
         
         return lines
             
