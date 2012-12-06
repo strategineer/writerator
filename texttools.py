@@ -15,7 +15,10 @@
 import logging
 import sys
 from functools import *
+import datetime
+import shelve
 
+from contextlib import closing
 
 import re
 import os
@@ -134,34 +137,12 @@ class Word(BasicText):
         else:
             return False
 
-class Character(BasicText):
-    """Represents a Character."""
-    consonants = "bcdfghjklmnpqrstvwxyz"
-    vowels = "aeiou"
-    punctuation = ";,.\"'"
-    
-    def __init__(self, text):
-        """Initializes a Character."""
-        super( Character, self ).__init__(text)
-
-    def isVowel(self):
-        """Determines if a Character is a vowel."""
-        return self.text.lower() in Character.vowels
-    
-    def isConsonant(self):
-        """Determines if a Character is a consonant."""
-        return self.text.lower() in Character.consonants
-    
-    def isPunctuation(self):
-        """Determines if a Character is punctuation."""
-        return self.text in Character.punctuation
-
 class Text(BasicText):
     """Represents a human language text."""
     
     # Represents the kinds of elements contained within texts, namely words (w),
-    # characters(c), phrases(p)
-    _types_of_elements = ['w', 'c', 'p']
+    # phrases(p)
+    _types_of_elements = ['w', 'p', 'c']
     
     @staticmethod
     def _clean_input_elements(elements, element_type):
@@ -174,10 +155,10 @@ class Text(BasicText):
             elements = [x.strip("\"!(),. ") for x in elements]
         
         elif element_type == Text._types_of_elements[1]:
-            pass
-        
-        elif element_type == Text._types_of_elements[2]:
             elements = [x.strip() for x in elements]
+            
+        elif element_type == Text._types_of_elements[2]:
+            return elements
         
         else:
             logging.error("No such element type, cannot clean elements.")
@@ -187,25 +168,76 @@ class Text(BasicText):
         
         assert "" not in elements
         return elements
-    
-    @staticmethod
-    def get_text_from_txt_file(filename_in):
+
+    def get_text_from_txt_file(self):
         """Rips the text from a plain text file and returns it as a str."""
-        if os.path.isfile(filename_in):
-            with io.open(filename_in, 'r') as file:
+        if os.path.isfile(self.filename):
+            with io.open(self.filename, 'r') as file:
                 lines = file.readlines()
             
             lines = [x.strip() for x in lines]
+            
             return " ".join(lines)
 
         else:
-            logging.error("No such filename cannot get text: " + filename_in)
+            logging.error("No such filename cannot get text: " + self.filename)
             sys.exit(0)
+    
+    def __get_data_filename(self):
+        directory = "data" + os.sep + self.filename
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        data_filename = directory + os.sep + self.filename + ".dat"
+        return data_filename
     
     def __init__(self, filename):
         """Initializes a Text."""
-        super( Text, self ).__init__(Text.get_text_from_txt_file(filename))
+        assert filename
+        self.filename = filename
+        super( Text, self ).__init__(self.get_text_from_txt_file())
+        self.db = self.compute_db_dict()
 
+    def compute_db_dict(self):
+        """Precomputes process intensive data and stores it for future use."""
+        
+        recompute = not os.path.isfile(self.__get_data_filename())
+        
+        if os.path.isfile(self.__get_data_filename() + ".dat"):
+            with closing(shelve.open(self.__get_data_filename())) as d:
+                input_file_time = os.path.getmtime(self.filename)
+                
+                file_date_modified = datetime.datetime.fromtimestamp(input_file_time)
+                data_date_modified = self.get_value_from_db("input_last_modified")
+                
+                recompute = str(data_date_modified) != str(file_date_modified)
+                
+        if recompute:
+            with closing(shelve.open(self.__get_data_filename())) as d:
+                
+                t_now = os.path.getmtime(self.filename)
+                file_date_modified = datetime.datetime.fromtimestamp(t_now)
+                
+                d["input_filename"] = self.filename
+                d["input_last_modified"] = file_date_modified
+                
+                d["words"] = self._parse_words()
+                d["phrases"] = self._parse_phrases()
+                d["characters"] = self._parse_characters()
+                
+                d["words_set"] = set(d["words"])
+                d["phrases_set"] = set(d["phrases"])
+                d["characters_set"] = set(d["characters"])
+                
+            
+            return d
+        
+        else:
+            with closing(shelve.open(self.__get_data_filename())) as d:
+                pass
+            
+            return d
+        
     def generate_poems(self, syllables_per_line, number_to_generate):
         
         def generate_poem_line(set_of_words, syllables_needed):
@@ -224,7 +256,7 @@ class Text(BasicText):
                 elif syllable_count > syllables_needed:
                     random_words = []
         
-        unique_words = list(set(self._parse_words()))
+        unique_words = list(self._get_data_from_db('w', is_set=True))
         
         poems = []
         for i in range(0, int(number_to_generate)):
@@ -241,24 +273,24 @@ class Text(BasicText):
     
     def count_words(self):
         """Counts the number of words in a Text."""
-        return len(self._parse_words(cast_as_objects=False))
+        return len(self._get_data_from_db('w', is_set=False))
     
     def count_phrases(self):
         """Counts the number of Phrases in a Text."""
-        return len(self._parse_phrases(cast_as_objects=False))
+        return len(self._get_data_from_db('p', is_set=False))
     
     def count_characters(self):
         """Counts the number of characters in a Text."""
-        return len(self._parse_characters(cast_as_objects=False))
+        return len(self._get_data_from_db('c', is_set=False))
     
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
-        words = self._parse_words()
+        words = self._get_data_from_db('w', is_set=False)
         complex_words = [word for word in words if word.countSyllables() >= 3 and not word.istitle()]
         
         number_of_words = len(words)
         number_of_complex_words = len(complex_words)
-        number_of_sentences = self.count_phrases()
+        number_of_sentences = self._get_data_from_db('p', is_set=False)
         
         return (0.4) * ( (number_of_words / number_of_sentences) 
                          + 100 * (number_of_complex_words / number_of_words) )
@@ -267,7 +299,7 @@ class Text(BasicText):
     def make_occurences_Counter(self, element_type):
         """Returns a Counter with the elements decided by kind, either
          words, characters or phrases as keys from within a Text."""
-        elements = self._parse_elements(element_type)    
+        elements = self._get_data_from_db(element_type, is_set=False)    
         return Counter( [str(x) for x in elements] )
         
     def count_occurences(self, element_to_count, element_type):
@@ -290,8 +322,8 @@ class Text(BasicText):
         assert isinstance(matches_to_check, list)
         
         if element_type in Text._types_of_elements:
-            elements = self._parse_elements(element_type)
-            set_of_elements = set(elements)
+            elements = self._get_data_from_db(element_type, is_set=False)
+            set_of_elements = self._get_data_from_db(element_type, is_set=True)
             
             ranked_by_matches = []
             
@@ -333,51 +365,42 @@ class Text(BasicText):
 
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""
-        words = self.split_text_by_element(Text._types_of_elements[0])
+        words = self._get_data_from_db('w', is_set=False)
         adverbs = []
         
         for word in words:
-            word_obj = Word(word)
-            if word_obj.isAdverb():
+            if word.isAdverb():
                 adverbs.append(word)
         
         return adverbs
 
 
-    def _parse_phrases(self, cast_as_objects=True):
-        """Parses a Text and returns a generator containing the phrases as Phrases"""
+    def _parse_phrases(self):
+        """Parses a Text and returns a list containing the phrases as Phrases"""
         phrases = self.text.split(".")
             
         phrases = Text._clean_input_elements(phrases, 'p')
         
-        if cast_as_objects:
-            return [Phrase(phrase) for phrase in phrases]
-        else:
-            return phrases
+        return [Phrase(phrase) for phrase in phrases]
+
     
-    def _parse_words(self, cast_as_objects=True):
-        """Parses a Text and returns a generator containing the words as Words"""
+    def _parse_words(self):
+        """Parses a Text and returns a list containing the words as Words"""
         words = self.text.split(" ")
         
         words = Text._clean_input_elements(words, 'w')
-        
-        if cast_as_objects:
-            return [Word(word) for word in words]
-        else:
-            return words
-    
-    def _parse_characters(self, cast_as_objects=True):
-        """Parses a Text and returns a generator containing the characters as Characters"""
+
+        return [Word(word) for word in words]
+
+    def _parse_characters(self):
+        """Parses a Text and returns a list containing the characters"""
         characters = list(self.text)
         
         characters = Text._clean_input_elements(characters, 'c')
         
-        if cast_as_objects:
-            return [Character(character) for character in characters]
-        else:
-            return characters
+        return characters
     
-    def _parse_elements(self, element_type):
+    def _get_data_from_db(self, element_type, is_set=False):
         """
             Splits the text by element and returns a list
             
@@ -385,41 +408,45 @@ class Text(BasicText):
             "Bill. Is. cool." => Characters (c) => ["B", "i", "l", "l", "I", "s", ...]
             "Bill. Is very. cool." => Phrases (p) => ["Bill", "Is very", "Cool"]
         """
+        
         if element_type in Text._types_of_elements:
             if element_type == Text._types_of_elements[0]:
-                return self._parse_words()
+                key = "words"
             
-            elif element_type == Text._types_of_elements[2]:
-                return self._parse_phrases()
-
             elif element_type == Text._types_of_elements[1]:
-                return self._parse_characters()
+                key = "phrases"
+
+            elif element_type == Text._types_of_elements[2]:
+                key = "characters"
+            
+            if is_set:
+                key = key + "_set"
+            
+            return self.get_value_from_db(key)
         
         else:
             logging.error("No such type available cannot split: " + element_type)
             logging.error("try: " + str(Text._types_of_elements))
             sys.exit(0)
-
+        
+    def get_value_from_db(self, key):
+        with closing(shelve.open(self.__get_data_filename())) as self.db:
+            if key in self.db.keys():
+                value = self.db[key]
+                
+                self.db.close()
+                
+                return value
+        
+            else:
+                logging.error("Key not contained within txt database: " + key )
+                sys.exit()
 
 def main():
     for word in ('honour', 'decode', 'decoded', 'oiseau', 'mathematical',
                  'abe','hippopotamus', 'reincarnation', 'information'):
         word_obj = Word(word)
         print(str(word_obj) + " " + str(word_obj.countSyllables()))
-    
-    for char in list("abcdefghijklmnopqrstuvwxyz"):
-        char_obj = Character(char)
-        print(str(char_obj))
-        if char_obj.isConsonant():
-            print(" ... is consonant. ")
-        
-        elif char_obj.isConsonant():
-            print(" ... is consonant. ")
-            
-        elif char_obj.isConsonant():
-            print(" ... is consonant. ")
-        print(str(char_obj) + ": isConsonant? " + str(char_obj.isConsonant())
-              + " isVowel? " + str(char_obj.isVowel()))
 
 
 if __name__== "__main__":
