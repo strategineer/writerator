@@ -49,40 +49,60 @@ def make_parser():
                                      description=textwrap.dedent(
                                      """
                                         option choices:
-                                        p number
-                                        generates a certain number of haikus using the
-                                        words from the input text
+                                        ******************************************************************
+                                        p NUMBER_TO_SHOW N1 N2 ...              (poem by pattern)
+                                        p NUMBER_TO_SHOW PRESET                 (poem by preset)
+                                        p NUMBER_TO_SHOW SYLLABLES x LINES      (poem by shortcut pattern)
                                         
-                                        t type number_to_display
-                                        ranks each element by the times they occur in the
-                                        text as a whole.
+                                        p: generates poems
                                         
-                                        c type element
-                                        count the number of times element appears in the
+                                        NUMBER_TO_SHOW: number of poems to output
+                                        N1, N2, ...: number of syllables for each line
+                                        
+                                        PRESET choices: 'h' for haiku or 's' for Shakespearing Sonnet
+                                        
+                                        SYLLABLES: number of syllables per line
+                                        LINES: number of lines
+                                        
+                                        ******************************************************************
+                                        t TYPE NUMBER_TO_SHOW
+                                        
+                                        t: counts each element in a text and ranks them 
+                                        by total count
+                                        TYPE: w for word, c for character, p for phrase
+                                        
+                                        ******************************************************************
+                                        c TYPE ELEMENT
+                                        
+                                        c: counts the number of times ELEMENT appears in the
                                         text.
+                                        TYPE: w for word, c for character, p for phrase
                                         
-                                        m type match number_to_display
-                                        ranks the elements by the amount of times each
-                                        MATCH appears in the element.
-                                        ATTENTION: Separate matches using ~
+                                        ******************************************************************
+                                        m TYPE PATTERN~PATTERN~... NUMBER_TO_SHOW
                                         
-                                        r test
-                                        calculates various readability tests.
-                                        choices for test: g for the Gunning-Fog Index
+                                        m: ranks the elements by the amount of times each
+                                        PATTERN appears in the element.
+                                        ATTENTION: Separate PATTERNs using ~
+                                        NUMBER_TO_SHOW: number of ranked elements to output
+                                        
+                                        ******************************************************************
+                                        r TEST
+                                        
+                                        r: calculates various readability tests.
+                                        TEST choices: g for the Gunning-Fog Index
+                                        ******************************************************************
                                         """))
     
     #Required arguments
     parser.add_argument("file_in", help="filename of input file")
     
-    parser.add_argument("option",  nargs='+',
-                        help="""
-                        type = w or c or p => (words, characters, phrases)
-                        """
-                        )
+    parser.add_argument("option",  nargs='+', help="""options detailed above""")
     
     #Optional arguments
-    parser.add_argument("-d", "--debug", help="displays logging debug messages.",
-                action="store_true")
+    parser.add_argument("-d", "--debug", 
+                        help="displays logging debug messages.",
+                        action="store_true")
     
     parser.add_argument("-o", "--output",
                         help="""writes output to a .txt file""",
@@ -119,9 +139,9 @@ def get_output(text, options):
             return get_readability_test_output(text, test)
         
         elif operation_type == 'p':
-            number_to_generate = get_args(operation_type, options)
+            (number_to_generate, syllables_pattern) = get_args(operation_type, options)
             
-            return get_haiku_output(text, number_to_generate)
+            return get_poem_output(text, syllables_pattern, number_to_generate)
             
         elif (operation_type == 't') or (operation_type == 'm'):
             if operation_type == 't':
@@ -148,8 +168,29 @@ def get_args(operation_type, args):
         return (args[1], args[2])
     
     elif operation_type == 'p':
-        assert len(args) == 2
-        return args[1]
+        assert len(args) >= 2
+        
+        def get_repeat_syllable_pattern(number_of_syllables, times_to_repeat):
+            assert isinstance(number_of_syllables, int) and isinstance(times_to_repeat, int)
+            repeat_pattern = []
+            for i in range(0, times_to_repeat):
+                repeat_pattern.append(number_of_syllables)
+            
+            return repeat_pattern
+        
+        #Multiplicator
+        if len(args) == 5 and args[3] == 'x':
+            return (args[1], get_repeat_syllable_pattern(int(args[2]), int(args[4])))
+        
+        #Shakespeare Sonnet
+        if args[2] == 's':
+            return (args[1], get_repeat_syllable_pattern(10, 14))
+        #Haiku
+        elif args[2] == 'h':
+            return (args[1], [7,5,7])
+        
+        else:
+            return (args[1], args[2:])
     
     elif operation_type == 'r':
         assert len(args) == 2
@@ -212,12 +253,12 @@ def generate_ranked_list_output(rank_list, number_to_show):
 def get_Gunning_output(text):
     return [text.calculate_Gunning_Fog_Index()]
 
-def get_haiku_output(text, number_to_generate):
+def get_poem_output(text, syllables_pattern, number_to_generate):
     output_lines = []
     
-    new_haikus = text.generate_haiku(number_to_generate)
-    for haiku in new_haikus:
-        for line in haiku:
+    poems = text.generate_poems(syllables_pattern, number_to_generate)
+    for poem in poems:
+        for line in poem:
             output_lines.append(line + "\n")
         
         output_lines.append("\n")
@@ -234,9 +275,9 @@ def output_to_file(filename, output_lines):
         file.writelines(output_lines)
 
 if __name__== "__main__":
-        #main()
+        main()
                
-        cProfile.run("main()", "main_stats.prof")
-        
-        p = pstats.Stats('main_stats.prof')
-        p.strip_dirs().sort_stats('time').print_stats(5)
+#        cProfile.run("main()", "main_stats.prof")
+#        
+#        p = pstats.Stats('main_stats.prof')
+#        p.strip_dirs().sort_stats('time').print_stats(5)

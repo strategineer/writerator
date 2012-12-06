@@ -205,48 +205,40 @@ class Text(BasicText):
     def __init__(self, filename):
         """Initializes a Text."""
         super( Text, self ).__init__(Text.get_text_from_txt_file(filename))
-    
-    def generate_poetry(self, number_of_lines, syllables_per_line):
-        pass
-    
-    def generate_haiku(self, number_to_generate):
+
+    def generate_poems(self, syllables_per_line, number_to_generate):
+        
+        def generate_poem_line(set_of_words, syllables_needed):
+            random_words = []
+            while True:
+                random_words.append(random.choice(set_of_words))
+                
+                syllable_count = sum([word.countSyllables() for word in random_words])
+                if syllable_count == syllables_needed:
+                    new_line = " ".join([str(word) for word in random_words]).capitalize()
+                    return new_line
+                
+                elif syllable_count < syllables_needed:
+                    pass
+                
+                elif syllable_count > syllables_needed:
+                    random_words = []
+        
         unique_words = list(set(self._parse_words()))
         
-        haikus = []
+        poems = []
         for i in range(0, int(number_to_generate)):
-            new_haiku_lines = []
+            poem_lines = []
             
-            for line_number in range(0, 3):
-                if line_number == 0 or line_number == 2:
-                    syllables_needed = 7
-                elif line_number == 1:
-                    syllables_needed = 5
-                
-                number_of_tries = 0
-                is_done = False
-                random_words = []
-                while not is_done:
-                    random_words.append(random.choice(unique_words))
+            for syllables_needed in syllables_per_line:                    
+                poem_line = generate_poem_line(unique_words, int(syllables_needed))
                     
-                    syllable_count = sum([word.countSyllables() for word in random_words])
-                    if syllable_count == syllables_needed:
-                        new_haiku_lines.append(" ".join([str(word) for word in random_words]).capitalize())
-                        is_done = True
-                    
-                    elif syllable_count < syllables_needed:
-                        pass
-                    
-                    elif syllable_count > syllables_needed:
-                        random_words = []
-                        number_of_tries += 1
-                        
-            logging.debug("Number of tries:" + str(number_of_tries))
+                poem_lines.append(poem_line)
         
-            haikus.append(new_haiku_lines)
+            poems.append(poem_lines)
             
-        return haikus
-            
-        
+        return poems
+    
     def count_words(self):
         """Counts the number of words in a Text."""
         return len(self._parse_words(cast_as_objects=False))
