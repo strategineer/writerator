@@ -209,34 +209,42 @@ class Text(BasicText):
     def generate_poetry(self, number_of_lines, syllables_per_line):
         pass
     
-    def generate_haiku(self):
+    def generate_haiku(self, number_to_generate):
         unique_words = list(set(self._parse_words()))
         
-        lines = []
-        for line_number in range(0, 3):
-            if line_number == 0 or line_number == 2:
-                syllables_needed = 7
-            elif line_number == 1:
-                syllables_needed = 5
+        haikus = []
+        for i in range(0, int(number_to_generate)):
+            new_haiku_lines = []
             
-            is_done = False
-            random_words = []
-            while not is_done:
-                random_words.append(random.choice(unique_words))
+            for line_number in range(0, 3):
+                if line_number == 0 or line_number == 2:
+                    syllables_needed = 7
+                elif line_number == 1:
+                    syllables_needed = 5
                 
-                syllable_count = sum([word.countSyllables() for word in random_words])
-                if syllable_count == syllables_needed:
-                    lines.append(" ".join([str(word) for word in random_words]).capitalize())
-                    is_done = True
-                
-                elif syllable_count < syllables_needed:
-                    pass
-                
-                elif syllable_count > syllables_needed:
-                    random_words = []
+                number_of_tries = 0
+                is_done = False
+                random_words = []
+                while not is_done:
+                    random_words.append(random.choice(unique_words))
                     
+                    syllable_count = sum([word.countSyllables() for word in random_words])
+                    if syllable_count == syllables_needed:
+                        new_haiku_lines.append(" ".join([str(word) for word in random_words]).capitalize())
+                        is_done = True
+                    
+                    elif syllable_count < syllables_needed:
+                        pass
+                    
+                    elif syllable_count > syllables_needed:
+                        random_words = []
+                        number_of_tries += 1
+                        
+            logging.debug("Number of tries:" + str(number_of_tries))
         
-        return lines
+            haikus.append(new_haiku_lines)
+            
+        return haikus
             
         
     def count_words(self):

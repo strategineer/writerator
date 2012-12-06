@@ -214,10 +214,10 @@ def get_Gunning_output(text):
 
 def get_haiku_output(text, number_to_generate):
     output_lines = []
-    for i in range(0, int(number_to_generate)):
-        new_haiku = text.generate_haiku()
-        
-        for line in new_haiku:
+    
+    new_haikus = text.generate_haiku(number_to_generate)
+    for haiku in new_haikus:
+        for line in haiku:
             output_lines.append(line + "\n")
         
         output_lines.append("\n")
@@ -234,9 +234,9 @@ def output_to_file(filename, output_lines):
         file.writelines(output_lines)
 
 if __name__== "__main__":
-        main()
-#               
-#        cProfile.run("main()", "main_stats.prof")
-#        
-#        p = pstats.Stats('main_stats.prof')
-#        p.strip_dirs().sort_stats('time').print_stats(5)
+        #main()
+               
+        cProfile.run("main()", "main_stats.prof")
+        
+        p = pstats.Stats('main_stats.prof')
+        p.strip_dirs().sort_stats('time').print_stats(5)
