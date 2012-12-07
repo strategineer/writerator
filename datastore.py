@@ -33,21 +33,21 @@ class DataStore(object):
     
     @staticmethod
     def _load_computed_data(filename, key_value_tuples=[]):
+        
+        def set_file_last_modified_time(database, filename):
+            """Sets filename's last modified within the db"""
+            t_now = os.path.getmtime(filename)
+            file_time_modified = datetime.datetime.fromtimestamp(t_now)
+                
+            database['file_time_modified'] = file_time_modified
+        
         with closing(shelve.open(DataStore.__get_data_filename(filename))) as database:
             for (key, value) in key_value_tuples:
                 database[key] = value
             
-            DataStore._set_file_last_modified_time(database, filename)
+            set_file_last_modified_time(database, filename)
         
         return database
-    
-    @staticmethod 
-    def _set_file_last_modified_time(database, filename):
-        """Sets filename's last modified within the db"""
-        t_now = os.path.getmtime(filename)
-        file_time_modified = datetime.datetime.fromtimestamp(t_now)
-            
-        database['file_time_modified'] = file_time_modified
     
     @staticmethod
     def __get_data_filename(filename):
