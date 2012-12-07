@@ -15,10 +15,6 @@
 import logging
 import sys
 from functools import *
-import datetime
-import shelve
-
-from contextlib import closing
 
 import re
 import os
@@ -26,6 +22,7 @@ import io
 import random
 from collections import Counter
 
+from datastore import DataStore
 
 @total_ordering
 class BasicText(object):
@@ -142,8 +139,22 @@ class Text(BasicText):
     
     # Represents the kinds of elements contained within texts, namely words (w),
     # phrases(p)
-    _types_of_elements = ['w', 'p', 'c']
+    _element_types = ['characters', 'words', 'phrases']
     
+    def __init__(self, filename):
+        """Initializes a Text."""
+        assert filename
+        self.filename = filename
+        super( Text, self ).__init__(self.get_text_from_txt_file())
+        
+        self.ds = DataStore(filename)
+        
+        if self.ds.is_to_be_computed():
+            self.ds.load_computed_data(self.__compute_ds_keys_values())
+        
+        else:
+            self.ds.load_computed_data()
+        
     @staticmethod
     def _clean_input_elements(elements, element_type):
         """
@@ -151,14 +162,14 @@ class Text(BasicText):
             whitespace from each element, removing the empty strings from the
             list and returns the result.
         """
-        if element_type == Text._types_of_elements[0]:
-            elements = [x.strip("\"!(),. ") for x in elements]
-        
-        elif element_type == Text._types_of_elements[1]:
-            elements = [x.strip() for x in elements]
-            
-        elif element_type == Text._types_of_elements[2]:
+        if element_type == Text._element_types[0]:
             return elements
+            
+        elif element_type == Text._element_types[1]:
+            elements = [x.strip("\"!(),. ") for x in elements]
+            
+        elif element_type == Text._element_types[2]:
+            elements = [x.strip() for x in elements]
         
         else:
             logging.error("No such element type, cannot clean elements.")
@@ -168,7 +179,7 @@ class Text(BasicText):
         
         assert "" not in elements
         return elements
-
+                
     def get_text_from_txt_file(self):
         """Rips the text from a plain text file and returns it as a str."""
         if os.path.isfile(self.filename):
@@ -182,61 +193,33 @@ class Text(BasicText):
         else:
             logging.error("No such filename cannot get text: " + self.filename)
             sys.exit(0)
-    
-    def __get_data_filename(self):
-        directory = "data" + os.sep + self.filename
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        
-        data_filename = directory + os.sep + self.filename + ".dat"
-        return data_filename
-    
-    def __init__(self, filename):
-        """Initializes a Text."""
-        assert filename
-        self.filename = filename
-        super( Text, self ).__init__(self.get_text_from_txt_file())
-        self.db = self.compute_db_dict()
 
-    def compute_db_dict(self):
-        """Precomputes process intensive data and stores it for future use."""
+    def __compute_ds_keys_values(self):
+        """Computes process intensive data."""
+        data_tuples = []
         
-        recompute = not os.path.isfile(self.__get_data_filename())
+        words = self._parse_words()
+        words_tpl = (Text._element_types[1], words)
+        data_tuples.append(words_tpl)
         
-        if os.path.isfile(self.__get_data_filename() + ".dat"):
-            with closing(shelve.open(self.__get_data_filename())) as d:
-                input_file_time = os.path.getmtime(self.filename)
-                
-                file_date_modified = datetime.datetime.fromtimestamp(input_file_time)
-                data_date_modified = self.get_value_from_db("input_last_modified")
-                
-                recompute = str(data_date_modified) != str(file_date_modified)
-                
-        if recompute:
-            with closing(shelve.open(self.__get_data_filename())) as d:
-                
-                t_now = os.path.getmtime(self.filename)
-                file_date_modified = datetime.datetime.fromtimestamp(t_now)
-                
-                d["input_filename"] = self.filename
-                d["input_last_modified"] = file_date_modified
-                
-                d["words"] = self._parse_words()
-                d["phrases"] = self._parse_phrases()
-                d["characters"] = self._parse_characters()
-                
-                d["words_set"] = set(d["words"])
-                d["phrases_set"] = set(d["phrases"])
-                d["characters_set"] = set(d["characters"])
-                
-            
-            return d
+        words_set_tpl = (Text._element_types[1] + "_set", set(words))
+        data_tuples.append(words_set_tpl)
         
-        else:
-            with closing(shelve.open(self.__get_data_filename())) as d:
-                pass
-            
-            return d
+        phrases = self._parse_phrases()
+        phrases_tpl = (Text._element_types[2], phrases)
+        data_tuples.append(phrases_tpl)
+        
+        phrases_set_tpl = (Text._element_types[2] + "_set", set(phrases))
+        data_tuples.append(phrases_set_tpl)
+        
+        characters = self._parse_characters()
+        characters_tpl = (Text._element_types[0], characters)
+        data_tuples.append(characters_tpl)
+        
+        characters_set_tpl = (Text._element_types[0] + "_set", set(characters))
+        data_tuples.append(characters_set_tpl)
+        
+        return data_tuples
         
     def generate_poems(self, syllables_per_line, number_to_generate):
         
@@ -256,7 +239,7 @@ class Text(BasicText):
                 elif syllable_count > syllables_needed:
                     random_words = []
         
-        unique_words = list(self._get_data_from_db('w', is_set=True))
+        unique_words = list(self.ds.get_data_from_db(Text._element_types[1] + "_set"))
         
         poems = []
         for i in range(0, int(number_to_generate)):
@@ -271,40 +254,27 @@ class Text(BasicText):
             
         return poems
     
-    def count_words(self):
-        """Counts the number of words in a Text."""
-        return len(self._get_data_from_db('w', is_set=False))
-    
-    def count_phrases(self):
-        """Counts the number of Phrases in a Text."""
-        return len(self._get_data_from_db('p', is_set=False))
-    
-    def count_characters(self):
-        """Counts the number of characters in a Text."""
-        return len(self._get_data_from_db('c', is_set=False))
-    
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
-        words = self._get_data_from_db('w', is_set=False)
+        words = self.ds.get_data_from_db(Text._element_types[1])
         complex_words = [word for word in words if word.countSyllables() >= 3 and not word.istitle()]
         
         number_of_words = len(words)
         number_of_complex_words = len(complex_words)
-        number_of_sentences = self._get_data_from_db('p', is_set=False)
+        number_of_sentences = len(self.ds.get_data_from_db(Text._element_types[2]))
         
         return (0.4) * ( (number_of_words / number_of_sentences) 
                          + 100 * (number_of_complex_words / number_of_words) )
 
-
-    def make_occurences_Counter(self, element_type):
+    def _make_occurences_Counter(self, element_type):
         """Returns a Counter with the elements decided by kind, either
          words, characters or phrases as keys from within a Text."""
-        elements = self._get_data_from_db(element_type, is_set=False)    
+        elements = self.ds.get_data_from_db(element_type)    
         return Counter( [str(x) for x in elements] )
         
     def count_occurences(self, element_to_count, element_type):
         """Return the total number of times an element appears in a Text."""
-        occurences = self.make_occurences_Counter(element_type)
+        occurences = self._make_occurences_Counter(element_type)
             
         if element_to_count in occurences:
             return occurences[element_to_count]
@@ -322,8 +292,8 @@ class Text(BasicText):
         assert isinstance(matches_to_check, list)
         
         if element_type in Text._types_of_elements:
-            elements = self._get_data_from_db(element_type, is_set=False)
-            set_of_elements = self._get_data_from_db(element_type, is_set=True)
+            elements = self.ds.get_data_from_db(element_type)
+            set_of_elements = self.ds.get_data_from_db(element_type + "_set")
             
             ranked_by_matches = []
             
@@ -353,7 +323,7 @@ class Text(BasicText):
             The list is sorted by number of occurences in decreasing order.
         """
         if element_type in Text._types_of_elements:
-            occurences = self.make_occurences_Counter(element_type)
+            occurences = self._make_occurences_Counter(element_type)
             
             return occurences.most_common()
         
@@ -365,7 +335,7 @@ class Text(BasicText):
 
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""
-        words = self._get_data_from_db('w', is_set=False)
+        words = self.ds.get_data_from_db(Text._element_types[1])
         adverbs = []
         
         for word in words:
@@ -379,7 +349,7 @@ class Text(BasicText):
         """Parses a Text and returns a list containing the phrases as Phrases"""
         phrases = self.text.split(".")
             
-        phrases = Text._clean_input_elements(phrases, 'p')
+        phrases = Text._clean_input_elements(phrases, Text._element_types[2])
         
         return [Phrase(phrase) for phrase in phrases]
 
@@ -388,7 +358,7 @@ class Text(BasicText):
         """Parses a Text and returns a list containing the words as Words"""
         words = self.text.split(" ")
         
-        words = Text._clean_input_elements(words, 'w')
+        words = Text._clean_input_elements(words, Text._element_types[1])
 
         return [Word(word) for word in words]
 
@@ -396,51 +366,9 @@ class Text(BasicText):
         """Parses a Text and returns a list containing the characters"""
         characters = list(self.text)
         
-        characters = Text._clean_input_elements(characters, 'c')
+        characters = Text._clean_input_elements(characters, Text._element_types[0])
         
         return characters
-    
-    def _get_data_from_db(self, element_type, is_set=False):
-        """
-            Splits the text by element and returns a list
-            
-            i.e. "Bill. Is. Cool." => Words (w) => ["Bill.", "Is.", "Cool."]
-            "Bill. Is. cool." => Characters (c) => ["B", "i", "l", "l", "I", "s", ...]
-            "Bill. Is very. cool." => Phrases (p) => ["Bill", "Is very", "Cool"]
-        """
-        
-        if element_type in Text._types_of_elements:
-            if element_type == Text._types_of_elements[0]:
-                key = "words"
-            
-            elif element_type == Text._types_of_elements[1]:
-                key = "phrases"
-
-            elif element_type == Text._types_of_elements[2]:
-                key = "characters"
-            
-            if is_set:
-                key = key + "_set"
-            
-            return self.get_value_from_db(key)
-        
-        else:
-            logging.error("No such type available cannot split: " + element_type)
-            logging.error("try: " + str(Text._types_of_elements))
-            sys.exit(0)
-        
-    def get_value_from_db(self, key):
-        with closing(shelve.open(self.__get_data_filename())) as self.db:
-            if key in self.db.keys():
-                value = self.db[key]
-                
-                self.db.close()
-                
-                return value
-        
-            else:
-                logging.error("Key not contained within txt database: " + key )
-                sys.exit()
 
 def main():
     for word in ('honour', 'decode', 'decoded', 'oiseau', 'mathematical',
