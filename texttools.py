@@ -196,6 +196,30 @@ class Text(BasicText):
 
     def __compute_ds_keys_values(self):
         """Computes process intensive data."""
+        def _parse_phrases(self):
+            """Parses a Text and returns a list containing the phrases as Phrases"""
+            phrases = self.text.split(".")
+                
+            phrases = Text._clean_input_elements(phrases, Text._element_types[2])
+            
+            return [Phrase(phrase) for phrase in phrases]
+    
+        def _parse_words(self):
+            """Parses a Text and returns a list containing the words as Words"""
+            words = self.text.split(" ")
+            
+            words = Text._clean_input_elements(words, Text._element_types[1])
+    
+            return [Word(word) for word in words]
+    
+        def _parse_characters(self):
+            """Parses a Text and returns a list containing the characters"""
+            characters = list(self.text)
+            
+            characters = Text._clean_input_elements(characters, Text._element_types[0])
+            
+            return characters
+        
         data_tuples = []
         
         words = self._parse_words()
@@ -343,32 +367,6 @@ class Text(BasicText):
                 adverbs.append(word)
         
         return adverbs
-
-
-    def _parse_phrases(self):
-        """Parses a Text and returns a list containing the phrases as Phrases"""
-        phrases = self.text.split(".")
-            
-        phrases = Text._clean_input_elements(phrases, Text._element_types[2])
-        
-        return [Phrase(phrase) for phrase in phrases]
-
-    
-    def _parse_words(self):
-        """Parses a Text and returns a list containing the words as Words"""
-        words = self.text.split(" ")
-        
-        words = Text._clean_input_elements(words, Text._element_types[1])
-
-        return [Word(word) for word in words]
-
-    def _parse_characters(self):
-        """Parses a Text and returns a list containing the characters"""
-        characters = list(self.text)
-        
-        characters = Text._clean_input_elements(characters, Text._element_types[0])
-        
-        return characters
 
 def main():
     for word in ('honour', 'decode', 'decoded', 'oiseau', 'mathematical',
