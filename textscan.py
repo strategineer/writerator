@@ -163,9 +163,23 @@ def get_output(text, options):
         sys.exit(0)
 
 def get_args(operation_type, args):
+    
+    def expand_element_type(code):
+        """Expands one letter element type code to full word"""
+        if code == 'c':
+            return "characters"
+        elif code == 'w':
+            return "words"
+        elif code == 'p':
+            return "phrases"
+        
+        else:
+            logging.error("No such element type cannot expand: " + code)
+            sys.exit(0)
+
     if operation_type == 'c':
         assert len(args) == 3
-        return (args[1], args[2])
+        return (expand_element_type(args[1]), args[2])
     
     elif operation_type == 'p':
         assert len(args) >= 2
@@ -198,11 +212,11 @@ def get_args(operation_type, args):
     
     elif operation_type == 't':
         assert len(args) == 3
-        return (args[1], int(args[2]))
+        return (expand_element_type(args[1]), int(args[2]))
     
     elif operation_type ==  'm':
         assert len(args) == 4
-        return (args[1], args[2], int(args[3]))
+        return (expand_element_type(args[1]), args[2], int(args[3]))
 
 def get_readability_test_output(text, test):
     if test == 'g':
@@ -231,13 +245,13 @@ def get_match_output(text, element_type, elements_to_match, number_to_display):
     
     return generate_ranked_list_output(ranked_elements, number_to_display)
 
-def get_last_index_for_output(ranked_elements, number_to_display):
-    if len(ranked_elements) < number_to_display:
-        return len(ranked_elements)
-    else:
-        return number_to_display
-
 def generate_ranked_list_output(rank_list, number_to_show):
+    
+    def get_last_index_for_output(ranked_elements, number_to_display):
+        if len(ranked_elements) < number_to_display:
+            return len(ranked_elements)
+        else:
+            return number_to_display
     
     last_index = get_last_index_for_output(rank_list, number_to_show)
     
