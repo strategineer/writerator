@@ -25,37 +25,39 @@ import os
 class DataStore(object):
     """Represents a persistent data storage framework."""
     
-    def __init__(self, filename):
+    def __init__(self, filename, key_value_pairs=[]):
         """Initializes a DataStore."""
         assert filename
         self.filename = filename
-
-    def load_computed_data(self, key_value_tuples=[]):
-        if not key_value_tuples:
-            with closing(shelve.open(self.__get_data_filename())) as self.db:
-                pass
-        
-        else:
-            with closing(shelve.open(self.__get_data_filename())) as self.db:
-                for (key, value) in key_value_tuples:
-                    self.db[key] = value
+        self.db = DataStore._load_computed_data(filename, key_value_pairs)
     
-    def set_file_last_modified_time(self):
-        """Sets filename's last modified within the db"""
-        with closing(shelve.open(self.__get_data_filename())) as self.db:
-            t_now = os.path.getmtime(self.filename)
-            file_time_modified = datetime.datetime.fromtimestamp(t_now)
+    @staticmethod
+    def _load_computed_data(filename, key_value_tuples=[]):
+        with closing(shelve.open(DataStore.__get_data_filename(filename))) as database:
+            for (key, value) in key_value_tuples:
+                database[key] = value
             
-            self.db['file_time_modified'] = file_time_modified
-
-    def __get_data_filename(self):
+            DataStore._set_file_last_modified_time(database, filename)
+        
+        return database
+    
+    @staticmethod 
+    def _set_file_last_modified_time(database, filename):
+        """Sets filename's last modified within the db"""
+        t_now = os.path.getmtime(filename)
+        file_time_modified = datetime.datetime.fromtimestamp(t_now)
+            
+        database['file_time_modified'] = file_time_modified
+    
+    @staticmethod
+    def __get_data_filename(filename):
         """
             Returns the db's filename without the .dat
             
             SIDE EFFECT: builds directories for the files if they don't
              exist as well
         """
-        (name, extension) = self.filename.split(".")
+        (name, extension) = filename.split(".")
         
         directory = "data" + os.sep + name
         
@@ -67,7 +69,7 @@ class DataStore(object):
         
     def get_data_from_db(self, key):
         """Get value associated to a key in the database"""
-        with closing(shelve.open(self.__get_data_filename())) as self.db:
+        with closing(shelve.open(DataStore.__get_data_filename(self.filename))) as self.db:
             if key in self.db.keys():
                 value = self.db[key]
                 
@@ -77,18 +79,19 @@ class DataStore(object):
                 logging.error("Key not contained within txt database: " + key )
                 sys.exit(0)
     
-    def is_to_be_computed(self):
+    @staticmethod
+    def is_to_be_computed(filename):
         """Checks if Datastore's db should be recomputed."""
-        if not os.path.isfile(self.__get_data_filename() + ".dat"):
+        if not os.path.isfile(DataStore.__get_data_filename(filename) + ".dat"):
             return True
         
         
         else:
-            with closing(shelve.open(self.__get_data_filename())) as self.db:
-                input_file_time = os.path.getmtime(self.filename)
+            with closing(shelve.open(DataStore.__get_data_filename(filename))) as database:
+                input_file_time = os.path.getmtime(filename)
                 
                 file_date_modified = datetime.datetime.fromtimestamp(input_file_time)
-                data_date_modified = self.db["file_time_modified"]
+                data_date_modified = database["file_time_modified"]
                 
                 return str(data_date_modified) != str(file_date_modified)
 
