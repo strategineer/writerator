@@ -147,13 +147,11 @@ class Text(BasicText):
         self.filename = filename
         super( Text, self ).__init__(self.get_text_from_txt_file())
         
-        self.ds = DataStore(filename)
-        
-        if self.ds.is_to_be_computed():
-            self.ds.load_computed_data(self.__compute_ds_keys_values())
+        if DataStore.is_to_be_computed(filename):
+            self.ds = DataStore(filename, self.__compute_ds_keys_values())
         
         else:
-            self.ds.load_computed_data()
+            self.ds = DataStore(filename)
         
     @staticmethod
     def _clean_input_elements(elements, element_type):
@@ -195,48 +193,24 @@ class Text(BasicText):
             sys.exit(0)
 
     def __compute_ds_keys_values(self):
-        """Computes process intensive data."""
-        def _parse_phrases(self):
-            """Parses a Text and returns a list containing the phrases as Phrases"""
-            phrases = self.text.split(".")
-                
-            phrases = Text._clean_input_elements(phrases, Text._element_types[2])
-            
-            return [Phrase(phrase) for phrase in phrases]
-    
-        def _parse_words(self):
-            """Parses a Text and returns a list containing the words as Words"""
-            words = self.text.split(" ")
-            
-            words = Text._clean_input_elements(words, Text._element_types[1])
-    
-            return [Word(word) for word in words]
-    
-        def _parse_characters(self):
-            """Parses a Text and returns a list containing the characters"""
-            characters = list(self.text)
-            
-            characters = Text._clean_input_elements(characters, Text._element_types[0])
-            
-            return characters
-        
+        """Computes process intensive data."""        
         data_tuples = []
         
-        words = self._parse_words()
+        words = self._split_by_element_type(Text._element_types[1])
         words_tpl = (Text._element_types[1], words)
         data_tuples.append(words_tpl)
         
         words_set_tpl = (Text._element_types[1] + "_set", set(words))
         data_tuples.append(words_set_tpl)
         
-        phrases = self._parse_phrases()
+        phrases = self._split_by_element_type(Text._element_types[2])
         phrases_tpl = (Text._element_types[2], phrases)
         data_tuples.append(phrases_tpl)
         
         phrases_set_tpl = (Text._element_types[2] + "_set", set(phrases))
         data_tuples.append(phrases_set_tpl)
         
-        characters = self._parse_characters()
+        characters = self._split_by_element_type(Text._element_types[0])
         characters_tpl = (Text._element_types[0], characters)
         data_tuples.append(characters_tpl)
         
@@ -244,7 +218,41 @@ class Text(BasicText):
         data_tuples.append(characters_set_tpl)
         
         return data_tuples
+
+    def _split_by_element_type(self, element_type):
+        def _parse_phrases(text):
+            """Parses a Text and returns a list containing the phrases as Phrases"""
+            phrases = text.split(".")
+                
+            phrases = Text._clean_input_elements(phrases, Text._element_types[2])
+            
+            return [Phrase(phrase) for phrase in phrases]
+    
+        def _parse_words(text):
+            """Parses a Text and returns a list containing the words as Words"""
+            words = text.split(" ")
+            
+            words = Text._clean_input_elements(words, Text._element_types[1])
+    
+            return [Word(word) for word in words]
+    
+        def _parse_characters(text):
+            """Parses a Text and returns a list containing the characters"""
+            characters = list(text)
+            
+            characters = Text._clean_input_elements(characters, Text._element_types[0])
+            
+            return characters
         
+        if element_type == Text._element_types[0]:
+            return _parse_characters(self.text)
+        
+        elif element_type == Text._element_types[1]:
+            return _parse_words(self.text)
+        
+        elif element_type == Text._element_types[2]:
+            return _parse_phrases(self.text)
+
     def generate_poems(self, syllables_per_line, number_to_generate):
         
         def generate_poem_line(set_of_words, syllables_needed):
