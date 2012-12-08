@@ -158,21 +158,13 @@ def make_parser(config):
     
     batch_parser = subparsers.add_parser("batch", 
                                          help="""run many commands, at once, 
-                                         specified in settings.ini. Look at .ini
-                                          file and write => -b example <= in 
-                                          the command line to see how it works.
-                                          """)
-    batch_parser.add_argument("-r", "--run", metavar="COMMAND_GROUPING",
-                              help="""Run the specified command grouping.""")
-    
-    batch_parser.add_argument("-a", "--add", nargs=2, 
-                              help="""NOT IMPLEMENTED, add commands to specified
-                              command grouping. (instead of entering them into 
-                              .ini manually) (don't have to know syntax this 
-                              way)""")
+                                         specified in the batch .ini file.""")
+    batch_parser.add_argument("-r", "--run", metavar="NAME",
+                              help="""Run the specified batch command grouping.""")
     
     batch_parser.add_argument("-l", "--list", action="store_true",
-                              help="""List all available batch groupings.""")
+                              help="""List the names of the available batch
+                              command groupings.""")
     
     
     return main_parser
@@ -291,10 +283,6 @@ def get_output(text, args, batch_config):
                     output_lines.append(command_grouping)
             
             return output_lines
-        
-        elif args.add:
-            logging.error("batch -a NOT IMPLEMENTED YET")
-            sys.exit(0)
 
 
 def get_readability_test_output(text, test):
