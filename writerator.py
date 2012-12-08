@@ -160,6 +160,12 @@ def make_parser(config):
     batch_parser.add_argument("-r", "--run", metavar="BATCH_NAME",
                               help="""Run the specified batch grouping.""")
     
+    batch_parser.add_argument("-a", "--add", nargs=2, 
+                              help="""NOT IMPLEMENTED, add commands to specified
+                              command grouping. (instead of entering them into 
+                              .ini manually) (don't have to know syntax this 
+                              way)""")
+    
     batch_parser.add_argument("-l", "--list", action="store_true",
                               help="""List all available batch groupings.""")
     
@@ -272,7 +278,7 @@ def get_output(text, args, config):
                 logging.error("No such batch grouping : " + args.run )
                 sys.exit(0)
         
-        if args.list:
+        elif args.list:
             ignore_list = ['DEFAULT', 'parser']
             output_lines = []
             for possible_batch_grouping in config:
@@ -280,6 +286,10 @@ def get_output(text, args, config):
                     output_lines.append(possible_batch_grouping)
             
             return output_lines
+        
+        elif args.add:
+            logging.error("batch -a NOT IMPLEMENTED YET")
+            sys.exit(0)
 
 
 def get_readability_test_output(text, test):
