@@ -90,7 +90,7 @@ class Word(BasicText):
             Counts the number of syllables for an English language Word.
             
             ~85% Accuracy apparently, but works on all words. Not only words in
-            the dictionnary
+            the dictionary
             
             COPYRIGHT Greg Fast, Dispenser (python port)
 
@@ -193,7 +193,10 @@ class Text(BasicText):
             sys.exit(0)
 
     def __compute_ds_keys_values(self):
-        """Computes process intensive data."""        
+        """
+            Computes process intensive data as key-value pairs and returns a
+            list containing each.
+        """        
         data_tuples = []
         
         words = self._split_by_element_type(Text._element_types[1])
@@ -220,6 +223,10 @@ class Text(BasicText):
         return data_tuples
 
     def _split_by_element_type(self, element_type):
+        """
+            Splits a text into a list elements depending on the given 
+            element_type.
+        """
         def _parse_phrases(text):
             """Parses a Text and returns a list containing the phrases as Phrases"""
             phrases = text.split(".")
@@ -254,7 +261,7 @@ class Text(BasicText):
             return _parse_phrases(self.text)
 
     def generate_poems(self, syllables_per_line, number_to_generate):
-        
+        """Generate poems using the words contained within the Text"""
         def generate_poem_line(set_of_words, syllables_needed):
             random_words = []
             while True:

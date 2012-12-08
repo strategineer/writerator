@@ -33,7 +33,7 @@ class DataStore(object):
     
     @staticmethod
     def _load_computed_data(filename, key_value_tuples=[]):
-        
+        """Loads the data into the database."""
         def set_file_last_modified_time(database, filename):
             """Sets filename's last modified within the db"""
             t_now = os.path.getmtime(filename)
