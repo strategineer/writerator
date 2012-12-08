@@ -33,10 +33,12 @@ def main():
     
     set_logging_level(args.debug)
     
+    logging.debug(str(args))
+    
     (filename_in, filename_out) = get_filenames(args.file_in)
     
     text = Text(filename_in)
-    output_lines = get_output(text, args.option)
+    output_lines = get_output(text, args)
     
     if args.output:
         output_to_file(filename_out, output_lines)
@@ -45,70 +47,96 @@ def main():
 
 
 def make_parser():
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-                                     description=textwrap.dedent(
-                                     """
-                                        option choices:
-                                        ******************************************************************
-                                        p NUMBER_TO_SHOW N1 N2 ...              (poem by pattern)
-                                        p NUMBER_TO_SHOW PRESET                 (poem by preset)
-                                        p NUMBER_TO_SHOW SYLLABLES x LINES      (poem by shortcut pattern)
-                                        
-                                        p: generates poems
-                                        
-                                        NUMBER_TO_SHOW: number of poems to output
-                                        N1, N2, ...: number of syllables for each line
-                                        
-                                        PRESET choices: 'h' for haiku or 's' for Shakespearing Sonnet
-                                        
-                                        SYLLABLES: number of syllables per line
-                                        LINES: number of lines
-                                        
-                                        ******************************************************************
-                                        t TYPE NUMBER_TO_SHOW
-                                        
-                                        t: counts each element in a text and ranks them 
-                                        by total count
-                                        TYPE: w for word, c for character, p for phrase
-                                        
-                                        ******************************************************************
-                                        c TYPE ELEMENT
-                                        
-                                        c: counts the number of times ELEMENT appears in the
-                                        text.
-                                        TYPE: w for word, c for character, p for phrase
-                                        
-                                        ******************************************************************
-                                        m TYPE PATTERN1~PATTERN2~... NUMBER_TO_SHOW
-                                        
-                                        m: ranks the elements by the amount of times each
-                                        PATTERN appears in the element.
-                                        ATTENTION: Separate PATTERNs using ~
-                                        NUMBER_TO_SHOW: number of ranked elements to output
-                                        
-                                        ******************************************************************
-                                        r TEST
-                                        
-                                        r: calculates various readability tests.
-                                        TEST choices: g for the Gunning-Fog Index
-                                        ******************************************************************
-                                        """))
+    main_parser = argparse.ArgumentParser()
     
-    #Required arguments
-    parser.add_argument("file_in", help="filename of input file")
     
-    parser.add_argument("option",  nargs='+', help="""options detailed above""")
+    main_parser.add_argument("file_in", help="filename of input file")
     
-    #Optional arguments
-    parser.add_argument("-d", "--debug", 
+    main_parser.add_argument("-d", "--debug", 
                         help="displays logging debug messages.",
                         action="store_true")
     
-    parser.add_argument("-o", "--output",
+    main_parser.add_argument("-o", "--output",
                         help="""writes output to a .txt file""",
                         action="store_true")
     
-    return parser
+    type_parent_parser = argparse.ArgumentParser(add_help=False)
+    
+    type_parent_parser.add_argument("-t", "--type", choices=['w', 'c', 's'],
+                                    default='w', type=str,
+                                    help="""determine the type of text elements 
+                                    (words, characters, sentences) to analyze""" )
+    
+    show_parent_parser = argparse.ArgumentParser(add_help=False)
+    
+    show_parent_parser.add_argument("-s", "--show", metavar="N", default=5,
+                                    type=int,
+                                    help="""choose the number of results to 
+                                    show (if applicable)""")
+    
+    
+    subparsers = main_parser.add_subparsers(help="commands", dest="command")
+    
+    poem_parser = subparsers.add_parser("poem", help=
+                                              """generate randomized poems""",
+                                              parents=[show_parent_parser])
+    
+    poem_group = poem_parser.add_mutually_exclusive_group()
+    
+    poem_group.add_argument("-l", "--syllables", nargs='+', metavar="N",
+                            type=int,
+                            help="""generate a poem by specifying the number of 
+                            syllables for each line in the poem.""")
+    
+    poem_group.add_argument("-p", "--preset", metavar="PRESET",
+                            choices=['h', 's'],
+                            help="""generate a poem by specifying a preset.""")
+    
+    poem_group.add_argument("-c", "--shortcut", metavar="N", type=int, nargs=2, 
+                            help="""generate a poem by specifying the number of 
+                            syllables per line and the number of lines.""")
+    
+    
+    count_parser = subparsers.add_parser("count", help=
+                                           """count occurrences of elements 
+                                           within the text""",
+                                           parents=[type_parent_parser, show_parent_parser])
+    
+    count_parser.add_argument("-o", "--totalcount", action="store_true",
+                              help="""count each element in a text and rank them 
+                                        by total count""")
+    
+    count_parser.add_argument("-c", "--count", metavar="ELEMENT", type=str,
+                              help="""count the number of times ELEMENT appears
+                              in the text.""")
+    
+    
+    
+    match_parser = subparsers.add_parser("match", help=
+                                           """count the number of matches of a 
+                                           pattern within each one of the 
+                                           elements of the text""",
+                                           parents=[type_parent_parser,
+                                                     show_parent_parser])
+    
+    match_parser.add_argument("patterns", metavar="PATTERN1~PATTERN2~...",
+                              type=str,
+                              help="""patterns, separated by ~, to match within 
+                              the elements.""")
+    
+    
+    info_parser = subparsers.add_parser("info", help=
+                                          """get general info about the text""")
+    
+    info_parser.add_argument("-g", "--general", action="store_true",
+                             help="""generate a general info printout about the 
+                             text.""")
+    
+    info_parser.add_argument("-t", "--test", choices=["g"],
+                             help="""test the readability of the text using 
+                             various readability tests. g for Gunning-Fog Index""")
+    
+    return main_parser
 
 def set_logging_level(bool_option):
     if bool_option:
@@ -124,99 +152,74 @@ def get_filenames(filename_in):
     
     return (filename_in, filename_out)
 
-def get_output(text, options):
-    operation_type = options[0]
-    operations = ['t', 'c', 'm', 'r', 'p']
-    
-    if operation_type in operations:
-        if operation_type == 'c':
-            (element_type, element_to_count) = get_args(operation_type, options)
-            
-            return get_count_output(text, element_type, element_to_count)
-            
-        elif operation_type == 'r':
-            test = get_args(operation_type, options)
-            return get_readability_test_output(text, test)
-        
-        elif operation_type == 'p':
-            (number_to_generate, syllables_pattern) = get_args(operation_type, options)
-            
-            return get_poem_output(text, syllables_pattern, number_to_generate)
-            
-        elif (operation_type == 't') or (operation_type == 'm'):
-            if operation_type == 't':
-                (element_type, number_to_display) = get_args(operation_type,
-                                                             options)
-                
-                return get_totalcount_output(text, element_type, number_to_display)
-                
-            elif operation_type == 'm':
-                (element_type,
-                 elements_to_match,
-                 number_to_display) = get_args(operation_type, options)
-                
-                return get_match_output(text, element_type, elements_to_match, 
-                                        number_to_display)
-        
-    else:
-        logging.error("No such operation type: " + operation_type)
-        sys.exit(0)
-
-def get_args(operation_type, args):
-    
-    def expand_element_type(code):
+def get_output(text, args):
+    def expand_type(code):
         """Expands one letter element type code to full word"""
         if code == 'c':
             return "characters"
         elif code == 'w':
             return "words"
-        elif code == 'p':
-            return "phrases"
+        elif code == 's':
+            return "sentences"
         
         else:
             logging.error("No such element type cannot expand: " + code)
             sys.exit(0)
-
-    if operation_type == 'c':
-        assert len(args) == 3
-        return (expand_element_type(args[1]), args[2])
     
-    elif operation_type == 'p':
-        assert len(args) >= 2
-        
-        def get_repeat_syllable_pattern(number_of_syllables, times_to_repeat):
-            assert isinstance(number_of_syllables, int) and isinstance(times_to_repeat, int)
-            repeat_pattern = []
-            for i in range(0, times_to_repeat):
-                repeat_pattern.append(number_of_syllables)
-            
-            return repeat_pattern
-        
-        #Multiplicator
-        if len(args) == 5 and args[3] == 'x':
-            return (args[1], get_repeat_syllable_pattern(int(args[2]), int(args[4])))
-        
+    def get_syllable_pattern(name):
         #Shakespeare Sonnet
-        if args[2] == 's':
-            return (args[1], get_repeat_syllable_pattern(10, 14))
+        if name == 's':
+            return get_repeat_syllable_pattern(10, 14)
         #Haiku
-        elif args[2] == 'h':
-            return (args[1], [7,5,7])
+        elif name == 'h':
+            return [7,5,7]
+
+    def get_repeat_syllable_pattern(number_of_syllables, times_to_repeat):
+        repeat_pattern = []
+        for i in range(0, times_to_repeat):
+            repeat_pattern.append(number_of_syllables)
         
-        else:
-            return (args[1], args[2:])
+        return repeat_pattern
     
-    elif operation_type == 'r':
-        assert len(args) == 2
-        return args[1]
+    commands = ['poem', 'count', 'match', 'info']
+
+    if args.command == commands[1]:
+        if args.count:
+            (element_type, element_to_count) = (expand_type(args.type) , args.count)
+            return get_count_output(text, element_type, element_to_count)
+        
+        elif args.totalcount:
+            (element_type, number_to_display) = (expand_type(args.type), args.show)
+            return get_totalcount_output(text, element_type, number_to_display)
     
-    elif operation_type == 't':
-        assert len(args) == 3
-        return (expand_element_type(args[1]), int(args[2]))
-    
-    elif operation_type ==  'm':
-        assert len(args) == 4
-        return (expand_element_type(args[1]), args[2], int(args[3]))
+    elif args.command == commands[2]:
+        (element_type, elements_to_match,
+         number_to_display) = (expand_type(args.type), args.patterns , args.show)
+        return get_match_output(text, element_type, elements_to_match, 
+                                    number_to_display)
+        
+    elif args.command == commands[0]:
+        
+        if args.syllables:
+            (syllables_pattern, number_to_generate) = (args.syllables, args.show)
+        
+        elif args.preset:
+            (syllables_pattern, number_to_generate) = (get_syllable_pattern(args.preset), args.show)
+            
+        elif args.shortcut:
+            (syllables_pattern, number_to_generate) = (get_repeat_syllable_pattern(args.shortcut[0], args.shortcut[1]), args.show)
+        
+        return get_poem_output(text, syllables_pattern, number_to_generate)
+        
+    elif args.command == commands[3]:
+        if args.general:
+            logging.error("info -g not implemented")
+            sys.exit(0)
+        
+        elif args.test == 'g':
+            test = args.test
+            return get_readability_test_output(text, test)
+
 
 def get_readability_test_output(text, test):
     if test == 'g':
@@ -289,9 +292,9 @@ def output_to_file(filename, output_lines):
         file.writelines(output_lines)
 
 if __name__== "__main__":
-        #main()
-               
-        cProfile.run("main()", "main_stats.prof")
-        
-        p = pstats.Stats('main_stats.prof')
-        p.strip_dirs().sort_stats('time').print_stats(5)
+        main()
+#               
+#        cProfile.run("main()", "main_stats.prof")
+#        
+#        p = pstats.Stats('main_stats.prof')
+#        p.strip_dirs().sort_stats('time').print_stats(5)
