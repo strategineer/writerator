@@ -257,9 +257,10 @@ def get_output(text, args, config):
     elif args.command == commands[4]:
         module_name = sys.argv[0]
         if args.run:
-            if args.run in config:
+            batch_name = "batch_" + args.run
+            if batch_name in config:
                 output_lines = []
-                for batch_args in get_batch_args_list(config, args.run):
+                for batch_args in get_batch_args_list(config, batch_name):
                     command = "python " + module_name + " " + args.file_in + " " + batch_args
                     
                     process1 = subprocess.Popen("echo " + command, stdout=subprocess.PIPE)
@@ -275,15 +276,15 @@ def get_output(text, args, config):
                 return output_lines
             
             else:
-                logging.error("No such batch grouping : " + args.run )
+                logging.error("No such batch grouping : " + batch_name )
                 sys.exit(0)
         
         elif args.list:
-            ignore_list = ['DEFAULT', 'parser']
             output_lines = []
-            for possible_batch_grouping in config:
-                if possible_batch_grouping not in ignore_list:
-                    output_lines.append(possible_batch_grouping)
+            batch_prefix = "batch_"
+            for possible_grouping in config:
+                if possible_grouping[:len(batch_prefix)] == batch_prefix:
+                    output_lines.append(possible_grouping[len(batch_prefix):])
             
             return output_lines
         
