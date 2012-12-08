@@ -20,6 +20,7 @@ import shelve
 
 from contextlib import closing
 
+import ntpath
 import os
 
 class DataStore(object):
@@ -28,7 +29,7 @@ class DataStore(object):
     def __init__(self, filename, key_value_pairs=[]):
         """Initializes a DataStore."""
         assert filename
-        self.filename = filename
+        self.filename = ntpath.basename(filename)
         self.db = DataStore._load_computed_data(filename, key_value_pairs)
     
     @staticmethod
@@ -57,7 +58,7 @@ class DataStore(object):
             SIDE EFFECT: builds directories for the files if they don't
              exist as well
         """
-        (name, extension) = filename.split(".")
+        (name, extension) = ntpath.basename(filename).split(".")
         
         directory = "data" + os.sep + name
         

@@ -19,6 +19,7 @@ import logging
 import sys
 import time
 import os
+import ntpath
 
 import argparse
 import configparser
@@ -31,13 +32,13 @@ from texttools import Text
 
 
 def main():   
-    main_config = configparser.ConfigParser()
-    main_config.read('config' + os.sep + 'settings.ini')
+    settings_config = configparser.ConfigParser()
+    settings_config.read('config' + os.sep + 'settings.ini')
     
     batch_config = configparser.ConfigParser()
     batch_config.read('config' + os.sep + 'batch.ini')
     
-    parser = make_parser(main_config)
+    parser = make_parser(settings_config)
     
     args = parser.parse_args()
     
@@ -45,7 +46,7 @@ def main():
     
     logging.debug(str(args))
     
-    (filename_in, filename_out) = get_filenames(args.file_in)
+    (filename_in, filename_out) = get_filenames(settings_config, args.file_in)
     
     text = Text(filename_in)
     
@@ -183,12 +184,13 @@ def set_logging_level(bool_option):
     else:
         logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 
-def get_filenames(filename_in):
+def get_filenames(settings_config, filename_in):
     
     (name, extension) = filename_in.split(".")
     filename_out = name + "_out" + "." + extension
     
-    return (filename_in, filename_out)
+    return (settings_config['folders']['InputFolder'] + os.sep + filename_in, 
+            settings_config['folders']['OutputFolder'] + os.sep + filename_out)
 
 def get_output(text, args, batch_config):
     def expand_type(code):
@@ -362,6 +364,12 @@ def output_to_console(output_lines):
         print(line)
 
 def output_to_file(filename, output_lines):
+    name = ntpath.basename(filename)
+    
+    output_directory = filename[:len(filename) - len(name)]
+    if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+    
     with io.open(filename, 'w') as file:
         file.writelines(output_lines)
 

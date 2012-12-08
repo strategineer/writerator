@@ -1,0 +1,33 @@
+Hey, my name's Bill. I'd like to welcome you to my newly allocated corner of the Internet. Thanks for stopping by!
+
+Welcome to Just Another Cog, my own personal programming blog with a little bit of humor sprinkled in. 
+
+Before I start, let me tell you a little about myself. I'm a first-year Software Engineering student at Mcgill University in Montreal, Canada. I have many areas of interest including: programming, writing, singing, martial arts movies, Japanese Rock, Korean Pop... I guess I like most if not everything originating from Asia.
+
+There's something about Asia that I like, I'm half Mexican and half Greek so my love for Asia doesn't come from my genes that's for sure. In any case, that's something to think about.
+
+The name "Just Another Cog" is a warning for myself as much as it an advertisement of my skills. 
+
+On one hand, it will serve as a constant reminder of what I do not want to become. Namely, a stressed and unhappy guy working for money rather than for the love of the work I do, like a "Cog".
+
+On the other, being a "Cog" might be so bad. A cog is a irreplaceable part of a machine, it's effective and well suited for the job at hand. It's hard working and as a programmer, I literally act as an interface between the computer, the machine, and the outside world. So this "Cog" metaphor is more appropriate than would be otherwise.
+
+So maybe, being "Just Another Cog" isn't such a bad thing.
+
+I want Just Another Cog to be a place where you, the reader, can learn a little bit more about programming and myself; in doing so, hopefully take something away from it.
+
+Just Another Cog will center around my ideas and experiences as a relatively* new but passionate programmer. 
+
+More than anything, I wish to teach non-programmers what programmers do, how they do it and why I think it's important. If I can spark the imagination of one single person and encourage them to learn programming then I'll have succeeded in my goal. 
+
+I also want to reach out to up-and-coming programmers like me by researching and discussing programming topics which pique my interest such as interesting languages, strategies, epigrams, IDEs and more.
+
+I'm a curious person and I'll always loved learning. By writing this blog, I want to become more knowledgeable and excited about programming. Also, I love writing and I don't write enough. Just Another Cog will allow me to share my work with world and, by doing so, give me an incentive to keep coming back to do something I love.
+
+As a first-year university student in Software Engineering I am and I will be flooded with all sorts of interesting info about programming for quite some time. Adding to that all the books, programming and recreational, I read, I shouldn't ever run out of stuff to share. Not to leave out all the programming I do just for fun. 
+
+I'm not endowed with prophetic powers (maybe I'll be someday though?) like the Ancient Greeks but I predict that Just Another Cog will be a lot of fun for me to write and, I hope, a lot of fun for you to read. 
+
+Bill
+
+* I've programmed and published two apps on Windows Phone (DnD Sidekick - DNA Toolkit). I've programmed in 5 languages including: Java, C#, Python, Perl, Erlang. And I'm always willing to learn more. I'm not a completely new programmer but compared to those who've been writing code all their lives I know nothing.
