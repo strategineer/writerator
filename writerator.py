@@ -20,6 +20,7 @@ import sys
 
 import argparse
 import configparser
+import subprocess
 
 import cProfile
 import pstats
@@ -28,6 +29,8 @@ from texttools import Text
 
 
 def main():
+    module_name = sys.argv[0]
+    
     config = configparser.ConfigParser()
     config.read('settings.ini')
     
@@ -42,12 +45,33 @@ def main():
     (filename_in, filename_out) = get_filenames(args.file_in)
     
     text = Text(filename_in)
-    output_lines = get_output(text, args)
+    
+    output_lines = []
+    if args.batch:
+        if args.batch in config:
+            for batch_args in get_batch_args_list(config, args.batch):
+                command = "python " + module_name + " " + filename_in + " " + batch_args
+                subprocess.call("echo " + command)
+                subprocess.call(command)
+        
+        else:
+            logging.error("No such batch commands name : " + args.batch )
+            sys.exit(0)
+    
+    else:
+        output_lines = get_output(text, args)
     
     if args.output:
         output_to_file(filename_out, output_lines)
     else:
         output_to_console(output_lines)
+
+def get_batch_args_list(config, batch_name):
+    params_list = []
+    for example_name in config[batch_name]:
+        params_list.append(config[batch_name][example_name])
+            
+    return params_list
 
 
 def make_parser(config):
@@ -55,6 +79,12 @@ def make_parser(config):
     
     
     main_parser.add_argument("file_in", help="filename of input file")
+    
+    main_parser.add_argument("-b", "--batch", metavar="BATCH_NAME", type=str, 
+                             help="""run many commands, at once, specified in 
+                             settings.ini. Look at .ini file and write 
+                             => -b example <= in the command line to see how it
+                             works.""")
     
     main_parser.add_argument("-d", "--debug", 
                         help="displays logging debug messages.",
