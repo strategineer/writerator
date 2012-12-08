@@ -30,10 +30,13 @@ from texttools import Text
 
 
 def main():   
-    config = configparser.ConfigParser()
-    config.read('settings.ini')
+    main_config = configparser.ConfigParser()
+    main_config.read('settings.ini')
     
-    parser = make_parser(config)
+    batch_config = configparser.ConfigParser()
+    batch_config.read('batch.ini')
+    
+    parser = make_parser(main_config)
     
     args = parser.parse_args()
     
@@ -45,7 +48,7 @@ def main():
     
     text = Text(filename_in)
     
-    output_lines = get_output(text, args, config)
+    output_lines = get_output(text, args, batch_config)
     
     if args.output:
         output_to_file(filename_out, output_lines)
@@ -54,8 +57,8 @@ def main():
 
 def get_batch_args_list(config, batch_name):
     params_list = []
-    for example_name in config[batch_name]:
-        params_list.append(config[batch_name][example_name])
+    for test_name in config[batch_name]:
+        params_list.append(config[batch_name][test_name])
             
     return params_list
 
@@ -157,8 +160,8 @@ def make_parser(config):
                                           file and write => -b example <= in 
                                           the command line to see how it works.
                                           """)
-    batch_parser.add_argument("-r", "--run", metavar="BATCH_NAME",
-                              help="""Run the specified batch grouping.""")
+    batch_parser.add_argument("-r", "--run", metavar="COMMAND_GROUPING",
+                              help="""Run the specified command grouping.""")
     
     batch_parser.add_argument("-a", "--add", nargs=2, 
                               help="""NOT IMPLEMENTED, add commands to specified
@@ -186,7 +189,7 @@ def get_filenames(filename_in):
     
     return (filename_in, filename_out)
 
-def get_output(text, args, config):
+def get_output(text, args, batch_config):
     def expand_type(code):
         """Expands one letter element type code to full word"""
         if code == 'c':
@@ -257,10 +260,9 @@ def get_output(text, args, config):
     elif args.command == commands[4]:
         module_name = sys.argv[0]
         if args.run:
-            batch_name = "batch_" + args.run
-            if batch_name in config:
+            if args.run in batch_config:
                 output_lines = []
-                for batch_args in get_batch_args_list(config, batch_name):
+                for batch_args in get_batch_args_list(batch_config, args.run):
                     command = "python " + module_name + " " + args.file_in + " " + batch_args
                     
                     process1 = subprocess.Popen("echo " + command, stdout=subprocess.PIPE)
@@ -281,10 +283,9 @@ def get_output(text, args, config):
         
         elif args.list:
             output_lines = []
-            batch_prefix = "batch_"
-            for possible_grouping in config:
-                if possible_grouping[:len(batch_prefix)] == batch_prefix:
-                    output_lines.append(possible_grouping[len(batch_prefix):])
+            for command_grouping in batch_config:
+                if command_grouping != "DEFAULT":
+                    output_lines.append(command_grouping)
             
             return output_lines
         
