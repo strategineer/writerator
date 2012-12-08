@@ -71,12 +71,12 @@ class BasicText(object):
     def __repr__(self):
         return self.__str__()
 
-class Phrase(BasicText):
-    """Represents a Phrase."""
+class Sentence(BasicText):
+    """Represents a Sentence."""
     
     def __init__(self, text):
-        """Initializes a Phrase."""
-        super( Phrase, self ).__init__(text + ".")
+        """Initializes a Sentence."""
+        super( Sentence, self ).__init__(text + ".")
   
 class Word(BasicText):
     """Represents a Word."""
@@ -137,9 +137,7 @@ class Word(BasicText):
 class Text(BasicText):
     """Represents a human language text."""
     
-    # Represents the kinds of elements contained within texts, namely words (w),
-    # phrases(p)
-    _element_types = ['characters', 'words', 'phrases']
+    _element_types = ['characters', 'words', 'sentences']
     
     def __init__(self, filename):
         """Initializes a Text."""
@@ -206,12 +204,12 @@ class Text(BasicText):
         words_set_tpl = (Text._element_types[1] + "_set", set(words))
         data_tuples.append(words_set_tpl)
         
-        phrases = self._split_by_element_type(Text._element_types[2])
-        phrases_tpl = (Text._element_types[2], phrases)
-        data_tuples.append(phrases_tpl)
+        sentences = self._split_by_element_type(Text._element_types[2])
+        sentences_tpl = (Text._element_types[2], sentences)
+        data_tuples.append(sentences_tpl)
         
-        phrases_set_tpl = (Text._element_types[2] + "_set", set(phrases))
-        data_tuples.append(phrases_set_tpl)
+        sentences_set_tpl = (Text._element_types[2] + "_set", set(sentences))
+        data_tuples.append(sentences_set_tpl)
         
         characters = self._split_by_element_type(Text._element_types[0])
         characters_tpl = (Text._element_types[0], characters)
@@ -227,13 +225,13 @@ class Text(BasicText):
             Splits a text into a list elements depending on the given 
             element_type.
         """
-        def _parse_phrases(text):
-            """Parses a Text and returns a list containing the phrases as Phrases"""
-            phrases = text.split(".")
+        def _parse_sentences(text):
+            """Parses a Text and returns a list containing the sentences as Sentences"""
+            sentences = text.split(".")
                 
-            phrases = Text._clean_input_elements(phrases, Text._element_types[2])
+            sentences = Text._clean_input_elements(sentences, Text._element_types[2])
             
-            return [Phrase(phrase) for phrase in phrases]
+            return [Sentence(sentence) for sentence in sentences]
     
         def _parse_words(text):
             """Parses a Text and returns a list containing the words as Words"""
@@ -258,7 +256,7 @@ class Text(BasicText):
             return _parse_words(self.text)
         
         elif element_type == Text._element_types[2]:
-            return _parse_phrases(self.text)
+            return _parse_sentences(self.text)
 
     def generate_poems(self, syllables_per_line, number_to_generate):
         """Generate poems using the words contained within the Text"""
@@ -307,7 +305,7 @@ class Text(BasicText):
 
     def _make_occurences_Counter(self, element_type):
         """Returns a Counter with the elements decided by kind, either
-         words, characters or phrases as keys from within a Text."""
+         words, characters or sentences as keys from within a Text."""
         elements = self.ds.get_data_from_db(element_type)    
         return Counter( [str(x) for x in elements] )
         
@@ -323,14 +321,13 @@ class Text(BasicText):
     def rank_by_number_of_matches(self, matches_to_check, element_type):
         """
             Returns a list of tuples containing the number of matches found in
-            each element [words (w), characters (c) or phrases (p)] of the Text and
-            the str form of the element.
+            each element of the Text and the str form of the element.
             
             The list is sorted by number of matches in decreasing order.
         """
         assert isinstance(matches_to_check, list)
         
-        if element_type in Text._types_of_elements:
+        if element_type in Text._element_types:
             elements = self.ds.get_data_from_db(element_type)
             set_of_elements = self.ds.get_data_from_db(element_type + "_set")
             
@@ -350,18 +347,18 @@ class Text(BasicText):
         
         else:
             logging.error("No such type available cannot rank by matches: " + element_type)
-            logging.error("try: " + str(Text._types_of_elements))
+            logging.error("try: " + str(Text._element_types))
             sys.exit(0)
 
     def rank_by_total_count(self, element_type):
         """
             Returns a list of tuples containing the number of occurrences of each
-            element [words (w), characters (c) or phrases (p)] found in the Text and
+            element found in the Text and
             the str form of the elements.
             
             The list is sorted by number of occurences in decreasing order.
         """
-        if element_type in Text._types_of_elements:
+        if element_type in Text._element_types:
             occurences = self._make_occurences_Counter(element_type)
             
             return occurences.most_common()
@@ -369,7 +366,7 @@ class Text(BasicText):
         else:
             logging.error("No such type available cannot rank by occurrences: "
                           + element_type)
-            logging.error("try: " + str(Text._types_of_elements))
+            logging.error("try: " + str(Text._element_types))
             sys.exit(0)
 
     def find_all_adverbs(self):
