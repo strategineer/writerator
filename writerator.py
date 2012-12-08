@@ -17,6 +17,7 @@
 import io
 import logging
 import sys
+import time
 
 import argparse
 import configparser
@@ -28,9 +29,7 @@ import pstats
 from texttools import Text
 
 
-def main():
-    module_name = sys.argv[0]
-    
+def main():   
     config = configparser.ConfigParser()
     config.read('settings.ini')
     
@@ -46,20 +45,7 @@ def main():
     
     text = Text(filename_in)
     
-    output_lines = []
-    if args.batch:
-        if args.batch in config:
-            for batch_args in get_batch_args_list(config, args.batch):
-                command = "python " + module_name + " " + filename_in + " " + batch_args
-                subprocess.call("echo " + command)
-                subprocess.call(command)
-        
-        else:
-            logging.error("No such batch commands name : " + args.batch )
-            sys.exit(0)
-    
-    else:
-        output_lines = get_output(text, args)
+    output_lines = get_output(text, args, config)
     
     if args.output:
         output_to_file(filename_out, output_lines)
@@ -80,12 +66,6 @@ def make_parser(config):
     
     main_parser.add_argument("file_in", help="filename of input file")
     
-    main_parser.add_argument("-b", "--batch", metavar="BATCH_NAME", type=str, 
-                             help="""run many commands, at once, specified in 
-                             settings.ini. Look at .ini file and write 
-                             => -b example <= in the command line to see how it
-                             works.""")
-    
     main_parser.add_argument("-d", "--debug", 
                         help="displays logging debug messages.",
                         action="store_true")
@@ -97,14 +77,14 @@ def make_parser(config):
     type_parent_parser = argparse.ArgumentParser(add_help=False)
     
     type_parent_parser.add_argument("-t", "--type", choices=['w', 'c', 's'],
-                                    default=config['parser']['DefaultElement'], type=str,
+                                    default=config['parser']['TypeOfElement'], type=str,
                                     help="""determine the type of text elements 
                                     (words, characters, sentences) to analyze""" )
     
     show_parent_parser = argparse.ArgumentParser(add_help=False)
     
     show_parent_parser.add_argument("-s", "--show", metavar="N", type=int,
-                                    default=int(config['parser']['DefaultToShow']),
+                                    default=int(config['parser']['NumberToShow']),
                                     help="""choose the number of results to 
                                     show (if applicable)""")
     
@@ -170,6 +150,20 @@ def make_parser(config):
                              help="""test the readability of the text using 
                              various readability tests. g for Gunning-Fog Index""")
     
+    
+    batch_parser = subparsers.add_parser("batch", 
+                                         help="""run many commands, at once, 
+                                         specified in settings.ini. Look at .ini
+                                          file and write => -b example <= in 
+                                          the command line to see how it works.
+                                          """)
+    batch_parser.add_argument("-r", "--run", metavar="BATCH_NAME",
+                              help="""Run the specified batch grouping.""")
+    
+    batch_parser.add_argument("-l", "--list", action="store_true",
+                              help="""List all available batch groupings.""")
+    
+    
     return main_parser
 
 def set_logging_level(bool_option):
@@ -186,7 +180,7 @@ def get_filenames(filename_in):
     
     return (filename_in, filename_out)
 
-def get_output(text, args):
+def get_output(text, args, config):
     def expand_type(code):
         """Expands one letter element type code to full word"""
         if code == 'c':
@@ -215,7 +209,7 @@ def get_output(text, args):
         
         return repeat_pattern
     
-    commands = ['poem', 'count', 'match', 'info']
+    commands = ['poem', 'count', 'match', 'info', 'batch']
 
     if args.command == commands[1]:
         if args.count:
@@ -253,6 +247,39 @@ def get_output(text, args):
         elif args.test == 'g':
             test = args.test
             return get_readability_test_output(text, test)
+    
+    elif args.command == commands[4]:
+        module_name = sys.argv[0]
+        if args.run:
+            if args.run in config:
+                output_lines = []
+                for batch_args in get_batch_args_list(config, args.run):
+                    command = "python " + module_name + " " + args.file_in + " " + batch_args
+                    
+                    process1 = subprocess.Popen("echo " + command, stdout=subprocess.PIPE)
+                    for line in process1.stdout:
+                        output_lines.append(line.rstrip().decode("utf-8"))
+                    
+                    process2 = subprocess.Popen(command, stdout=subprocess.PIPE)
+                    for line in process2.stdout:
+                        output_lines.append(line.rstrip().decode("utf-8"))
+                    
+                    output_lines.append(" ")
+                
+                return output_lines
+            
+            else:
+                logging.error("No such batch grouping : " + args.run )
+                sys.exit(0)
+        
+        if args.list:
+            ignore_list = ['DEFAULT', 'parser']
+            output_lines = []
+            for possible_batch_grouping in config:
+                if possible_batch_grouping not in ignore_list:
+                    output_lines.append(possible_batch_grouping)
+            
+            return output_lines
 
 
 def get_readability_test_output(text, test):
