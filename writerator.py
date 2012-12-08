@@ -96,6 +96,54 @@ def make_parser(config):
     
     subparsers = main_parser.add_subparsers(help="commands", dest="command")
     
+    batch_parser = subparsers.add_parser("batch", 
+                                         help="""run many commands, at once, 
+                                         specified in the batch .ini file.""")
+    batch_parser.add_argument("-r", "--run", metavar="NAME",
+                              help="""Run the specified batch command grouping.""")
+    
+    batch_parser.add_argument("-l", "--list", action="store_true",
+                              help="""List the names of the available batch
+                              command groupings.""")
+    
+    
+    count_parser = subparsers.add_parser("count", help=
+                                           """count occurrences of elements 
+                                           within the text""",
+                                           parents=[type_parent_parser, show_parent_parser])
+    
+    count_parser.add_argument("-o", "--totalcount", action="store_true",
+                              help="""count each element in a text and rank them 
+                                        by total count""")
+    
+    count_parser.add_argument("-c", "--count", metavar="ELEMENT", type=str,
+                              help="""count the number of times ELEMENT appears
+                              in the text.""")
+    
+    info_parser = subparsers.add_parser("info", help=
+                                          """get general info about the text""")
+    
+    info_parser.add_argument("-g", "--general", action="store_true",
+                             help="""generate a general info printout about the 
+                             text.""")
+    
+    info_parser.add_argument("-t", "--test", choices=["g"],
+                             help="""test the readability of the text using 
+                             various readability tests. g for Gunning-Fog Index""")
+    
+    match_parser = subparsers.add_parser("match", help=
+                                           """count the number of matches of a 
+                                           pattern within each one of the 
+                                           elements of the text""",
+                                           parents=[type_parent_parser,
+                                                     show_parent_parser])
+    
+    match_parser.add_argument("patterns", metavar="PATTERN1~PATTERN2~...",
+                              type=str,
+                              help="""patterns, separated by ~, to match within 
+                              the elements.""")
+    
+    
     poem_parser = subparsers.add_parser("poem", help=
                                               """generate randomized poems""",
                                               parents=[show_parent_parser])
@@ -114,58 +162,6 @@ def make_parser(config):
     poem_group.add_argument("-c", "--shortcut", metavar="N", type=int, nargs=2, 
                             help="""generate a poem by specifying the number of 
                             syllables per line and the number of lines.""")
-    
-    
-    count_parser = subparsers.add_parser("count", help=
-                                           """count occurrences of elements 
-                                           within the text""",
-                                           parents=[type_parent_parser, show_parent_parser])
-    
-    count_parser.add_argument("-o", "--totalcount", action="store_true",
-                              help="""count each element in a text and rank them 
-                                        by total count""")
-    
-    count_parser.add_argument("-c", "--count", metavar="ELEMENT", type=str,
-                              help="""count the number of times ELEMENT appears
-                              in the text.""")
-    
-    
-    
-    match_parser = subparsers.add_parser("match", help=
-                                           """count the number of matches of a 
-                                           pattern within each one of the 
-                                           elements of the text""",
-                                           parents=[type_parent_parser,
-                                                     show_parent_parser])
-    
-    match_parser.add_argument("patterns", metavar="PATTERN1~PATTERN2~...",
-                              type=str,
-                              help="""patterns, separated by ~, to match within 
-                              the elements.""")
-    
-    
-    info_parser = subparsers.add_parser("info", help=
-                                          """get general info about the text""")
-    
-    info_parser.add_argument("-g", "--general", action="store_true",
-                             help="""generate a general info printout about the 
-                             text.""")
-    
-    info_parser.add_argument("-t", "--test", choices=["g"],
-                             help="""test the readability of the text using 
-                             various readability tests. g for Gunning-Fog Index""")
-    
-    
-    batch_parser = subparsers.add_parser("batch", 
-                                         help="""run many commands, at once, 
-                                         specified in the batch .ini file.""")
-    batch_parser.add_argument("-r", "--run", metavar="NAME",
-                              help="""Run the specified batch command grouping.""")
-    
-    batch_parser.add_argument("-l", "--list", action="store_true",
-                              help="""List the names of the available batch
-                              command groupings.""")
-    
     
     return main_parser
 
