@@ -18,6 +18,7 @@ import io
 import logging
 import sys
 import time
+import os
 
 import argparse
 import configparser
@@ -31,10 +32,10 @@ from texttools import Text
 
 def main():   
     main_config = configparser.ConfigParser()
-    main_config.read('settings.ini')
+    main_config.read('config' + os.sep + 'settings.ini')
     
     batch_config = configparser.ConfigParser()
-    batch_config.read('batch.ini')
+    batch_config.read('config' + os.sep + 'batch.ini')
     
     parser = make_parser(main_config)
     
@@ -278,7 +279,7 @@ def get_output(text, args, batch_config):
                 return output_lines
             
             else:
-                logging.error("No such batch grouping : " + batch_name )
+                logging.error("No such batch grouping : " + args.run )
                 sys.exit(0)
         
         elif args.list:
