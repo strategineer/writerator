@@ -19,7 +19,8 @@ import logging
 import sys
 
 import argparse
-import textwrap
+import configparser
+
 import cProfile
 import pstats
 
@@ -27,7 +28,10 @@ from texttools import Text
 
 
 def main():
-    parser = make_parser()
+    config = configparser.ConfigParser()
+    config.read('settings.ini')
+    
+    parser = make_parser(config)
     
     args = parser.parse_args()
     
@@ -46,7 +50,7 @@ def main():
         output_to_console(output_lines)
 
 
-def make_parser():
+def make_parser(config):
     main_parser = argparse.ArgumentParser()
     
     
@@ -63,14 +67,14 @@ def make_parser():
     type_parent_parser = argparse.ArgumentParser(add_help=False)
     
     type_parent_parser.add_argument("-t", "--type", choices=['w', 'c', 's'],
-                                    default='w', type=str,
+                                    default=config['parser']['DefaultElement'], type=str,
                                     help="""determine the type of text elements 
                                     (words, characters, sentences) to analyze""" )
     
     show_parent_parser = argparse.ArgumentParser(add_help=False)
     
-    show_parent_parser.add_argument("-s", "--show", metavar="N", default=5,
-                                    type=int,
+    show_parent_parser.add_argument("-s", "--show", metavar="N", type=int,
+                                    default=int(config['parser']['DefaultToShow']),
                                     help="""choose the number of results to 
                                     show (if applicable)""")
     
