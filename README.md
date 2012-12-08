@@ -1,9 +1,9 @@
-text-scanner
+writerator
 ============
 
-text-scanner is a command line application which analyzes plain text files containing english language writing and acquires information about them.
+writerator is a command line tool which analyzes plain text files containing english language writing and acquires information about them.
 
-text-scanner can randomly generate haikus using user-given words/input.
+writerator can randomly generate haikus using user-given words/input.
 
 A wise computer once told me,
 
@@ -11,12 +11,12 @@ A wise computer once told me,
  Perpendiculars,
  Forestry spreadsheets zaniest."
 
-If you enjoy writing and/or programming then you should give text-scanner a shot!
+If you enjoy writing and/or programming then you should give writerator a shot!
 
 
 Oh... You're still here. Ok.
 
-Well, text-scanner grants the curious user with many tools to find specific information about their texts such as number of times "I" appears or the words in a text sorted by how many times "e" appears in them.
+Well, writerator grants the curious user with many tools to find specific information about their texts such as number of times "I" appears or the words in a text sorted by how many times "e" appears in them.
 
 It also allows "get the job done" type of users to retrieve more general information such as the most common words used, the Gunning-Fog index, the word count and many more.
 
