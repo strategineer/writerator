@@ -41,3 +41,4 @@ nosetests.xml
 *_out.txt
 *.komodoproject
 *.dat*
+*.cover
