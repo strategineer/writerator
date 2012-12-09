@@ -76,14 +76,14 @@ class Sentence(BasicText):
     
     def __init__(self, text):
         """Initializes a Sentence."""
-        super( Sentence, self ).__init__(text + ".")
+        super( Sentence, self ).__init__(text.strip(" .") + ".")
   
 class Word(BasicText):
     """Represents a Word."""
     
     def __init__(self, text):
         """Initializes a Word."""
-        super( Word, self ).__init__(text)
+        super( Word, self ).__init__(text.strip(""" ,.?!;:\"\'"""))
         
     def countSyllables(self):
         """
@@ -206,13 +206,13 @@ class Text(BasicText):
             """Parses a Text and returns a list containing the sentences as Sentences"""            
             sentences = text.split('.')
             
-            return [Sentence(sentence.strip() + ".") for sentence in sentences if sentence]
+            return [Sentence(sentence) for sentence in sentences if sentence]
     
         def _parse_words(text):
             """Parses a Text and returns a list containing the words as Words"""
             words = text.split(" ")
     
-            return [Word(word.rstrip(""" ,.?!;:\"\'""")) for word in words if word]
+            return [Word(word) for word in words if word]
     
         def _parse_characters(text):
             """Parses a Text and returns a list containing the characters"""
