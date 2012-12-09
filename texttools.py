@@ -146,35 +146,12 @@ class Text(BasicText):
         super( Text, self ).__init__(self.get_text_from_txt_file())
         
         if DataStore.is_to_be_computed(filename):
-            self.ds = DataStore(filename, self.__compute_ds_keys_values())
+            database = DataStore(filename, self.__compute_ds_keys_values())
         
         else:
-            self.ds = DataStore(filename)
+            database = DataStore(filename)
         
-    @staticmethod
-    def _clean_input_elements(elements, element_type):
-        """
-            Cleans a list of elements by removing unnecessary punctuation,
-            whitespace from each element, removing the empty strings from the
-            list and returns the result.
-        """
-        if element_type == Text._element_types[0]:
-            return elements
-            
-        elif element_type == Text._element_types[1]:
-            elements = [x.strip("\"!(),. ") for x in elements]
-            
-        elif element_type == Text._element_types[2]:
-            elements = [x.strip() for x in elements]
-        
-        else:
-            logging.error("No such element type, cannot clean elements.")
-            sys.exit(0)
-        
-        elements = list(filter(None, elements))
-        
-        assert "" not in elements
-        return elements
+        self.ds = database
                 
     def get_text_from_txt_file(self):
         """Rips the text from a plain text file and returns it as a str."""
@@ -226,26 +203,20 @@ class Text(BasicText):
             element_type.
         """
         def _parse_sentences(text):
-            """Parses a Text and returns a list containing the sentences as Sentences"""
-            sentences = text.split(".")
-                
-            sentences = Text._clean_input_elements(sentences, Text._element_types[2])
+            """Parses a Text and returns a list containing the sentences as Sentences"""            
+            sentences = text.split('.')
             
-            return [Sentence(sentence) for sentence in sentences]
+            return [Sentence(sentence.strip() + ".") for sentence in sentences if sentence]
     
         def _parse_words(text):
             """Parses a Text and returns a list containing the words as Words"""
             words = text.split(" ")
-            
-            words = Text._clean_input_elements(words, Text._element_types[1])
     
-            return [Word(word) for word in words]
+            return [Word(word.rstrip(""",.?!;:\"\'""")) for word in words if word]
     
         def _parse_characters(text):
             """Parses a Text and returns a list containing the characters"""
             characters = list(text)
-            
-            characters = Text._clean_input_elements(characters, Text._element_types[0])
             
             return characters
         
