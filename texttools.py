@@ -32,17 +32,17 @@ class BasicText(object):
         """Initializes a BasicText."""
         assert isinstance(text, str)
         self.text = text
-    
-    def isspace(self):
-        """Determines if a BasicText contains only whitespace"""
-        return self.text.isspace()
-    
-    def istitle(self):
-        """
-            Determines if a BasicText is a Title, i.e. each word
-            has first letter capitalized.
-        """
-        return self.text.istitle()
+#    
+#    def isspace(self):
+#        """Determines if a BasicText contains only whitespace"""
+#        return self.text.isspace()
+#    
+#    def istitle(self):
+#        """
+#            Determines if a BasicText is a Title, i.e. each word
+#            has first letter capitalized.
+#        """
+#        return self.text.istitle()
         
     def count(self, to_count):
         """Counts the number of times to_count appears in BasicText"""
@@ -212,7 +212,7 @@ class Text(BasicText):
             """Parses a Text and returns a list containing the words as Words"""
             words = text.split(" ")
     
-            return [Word(word.rstrip(""",.?!;:\"\'""")) for word in words if word]
+            return [Word(word.rstrip(""" ,.?!;:\"\'""")) for word in words if word]
     
         def _parse_characters(text):
             """Parses a Text and returns a list containing the characters"""
