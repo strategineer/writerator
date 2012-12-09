@@ -256,7 +256,8 @@ def get_output(text, args, batch_config):
                 for batch_args in get_batch_args_list(batch_config, args.run):
                     command = "python " + module_name + " " + args.file_in + " " + batch_args
                     
-                    process1 = subprocess.Popen("echo " + command, stdout=subprocess.PIPE)
+                    #shell=True for echo to work on Windows
+                    process1 = subprocess.Popen("echo " + command, stdout=subprocess.PIPE, shell=True)
                     for line in process1.stdout:
                         output_lines.append(line.rstrip().decode("utf-8"))
                     
