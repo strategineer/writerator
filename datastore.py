@@ -14,7 +14,6 @@
 
 import logging
 import sys
-from functools import *
 import datetime
 import shelve
 

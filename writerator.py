@@ -17,7 +17,6 @@
 import io
 import logging
 import sys
-import time
 import os
 import ntpath
 
