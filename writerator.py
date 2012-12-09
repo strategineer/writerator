@@ -30,7 +30,10 @@ import pstats
 from texttools import Text
 
 
-def main():   
+def main():
+    #Runs Unit-Tests
+    subprocess.call("python texttools_unittest.py -q")
+    
     settings_config = configparser.ConfigParser()
     settings_config.read('config' + os.sep + 'settings.ini')
     
