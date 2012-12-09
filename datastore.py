@@ -28,7 +28,7 @@ class DataStore(object):
     def __init__(self, filename, key_value_pairs=[]):
         """Initializes a DataStore."""
         assert filename
-        self.filename = ntpath.basename(filename)
+        self.filename = filename
         self.db = DataStore._load_computed_data(filename, key_value_pairs)
     
     @staticmethod
