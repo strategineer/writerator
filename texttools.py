@@ -28,21 +28,21 @@ from datastore import DataStore
 class BasicText(object):
     """Represents a BasicText used for inheritance."""
 
-    def __init__(self, text):
+    def __init__(self):
         """Initializes a BasicText."""
-        assert isinstance(text, str)
-        self.text = text
-#    
-#    def isspace(self):
-#        """Determines if a BasicText contains only whitespace"""
-#        return self.text.isspace()
-#    
-#    def istitle(self):
-#        """
-#            Determines if a BasicText is a Title, i.e. each word
-#            has first letter capitalized.
-#        """
-#        return self.text.istitle()
+        self._text = None
+
+    @property
+    def text(self):
+        return self._text
+    
+    @text.setter
+    def text(self, new_text):
+        self._text = new_text
+    
+    @text.deleter
+    def text(self):
+        del self._text
         
     def count(self, to_count):
         """Counts the number of times to_count appears in BasicText"""
@@ -76,15 +76,23 @@ class Sentence(BasicText):
     
     def __init__(self, text):
         """Initializes a Sentence."""
-        super( Sentence, self ).__init__(text.strip(" .") + ".")
+        self.text = text
+    
+    @BasicText.text.setter
+    def text(self, new_text):
+        self._text = new_text.strip(" .") + "."
   
 class Word(BasicText):
     """Represents a Word."""
     
     def __init__(self, text):
         """Initializes a Word."""
-        super( Word, self ).__init__(text.strip(""" ,.?!;:\"\'"""))
-        
+        self.text = text
+    
+    @BasicText.text.setter
+    def text(self, new_text):
+        self._text = new_text.strip(""" ,.?!;:\"\'""")
+
     def countSyllables(self):
         """
             Counts the number of syllables for an English language Word.
@@ -143,7 +151,7 @@ class Text(BasicText):
         """Initializes a Text."""
         assert filename
         self.filename = filename
-        super( Text, self ).__init__(self.get_text_from_txt_file())
+        self.text = self.get_text_from_txt_file()
         
         if DataStore.is_to_be_computed(filename):
             database = DataStore(filename, self.__compute_ds_keys_values())
