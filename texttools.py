@@ -14,7 +14,7 @@
 
 import logging
 import sys
-from functools import *
+from functools import total_ordering
 
 import re
 import os
@@ -135,6 +135,10 @@ class Word(BasicText):
         
         return (syl or 1)    # got no vowels? ("the", "crwth")
     
+    def istitle(self):
+        """ Determines if first letter of a Word is capitalized"""
+        return self.text[0].isupper()
+
     def isAdverb(self):
         """Determines whether word is an adverb."""
         if re.match(r"\w+ly", self.text):
@@ -173,7 +177,7 @@ class Text(BasicText):
 
         else:
             logging.error("No such filename cannot get text: " + self.filename)
-            sys.exit(0)
+            sys.exit(1)
 
     def __compute_ds_keys_values(self):
         """
@@ -258,7 +262,7 @@ class Text(BasicText):
         unique_words = list(self.ds.get_data_from_db(Text._element_types[1] + "_set"))
         
         poems = []
-        for i in range(0, int(number_to_generate)):
+        for _ in range(0, int(number_to_generate)):
             poem_lines = []
             
             for syllables_needed in syllables_per_line:                    
@@ -307,7 +311,6 @@ class Text(BasicText):
         assert isinstance(matches_to_check, list)
         
         if element_type in Text._element_types:
-            elements = self.ds.get_data_from_db(element_type)
             set_of_elements = self.ds.get_data_from_db(element_type + "_set")
             
             ranked_by_matches = []
@@ -327,7 +330,7 @@ class Text(BasicText):
         else:
             logging.error("No such type available cannot rank by matches: " + element_type)
             logging.error("try: " + str(Text._element_types))
-            sys.exit(0)
+            sys.exit(1)
 
     def rank_by_total_count(self, element_type):
         """
@@ -346,7 +349,7 @@ class Text(BasicText):
             logging.error("No such type available cannot rank by occurrences: "
                           + element_type)
             logging.error("try: " + str(Text._element_types))
-            sys.exit(0)
+            sys.exit(1)
 
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""
