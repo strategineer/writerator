@@ -267,7 +267,11 @@ def get_output(text, parser, batch_config, args_list=[]):
         if args.run:
             if args.run in batch_config:
                 output_lines = []
-                for batch_args in get_batch_args_list(batch_config, args.run):
+                batch_args_list = get_batch_args_list(batch_config, args.run)
+                batch_args_count = 0
+                for batch_args in batch_args_list:
+                    batch_args_count += 1
+                    
                     args_string = args.file_in + " " + batch_args
                     
                     args_list = shlex.split(args_string)
@@ -277,12 +281,13 @@ def get_output(text, parser, batch_config, args_list=[]):
                         new_output_lines = get_output(text, parser, batch_config, args_list)
                         
                         if args.showcommand:
-                            output_lines.append("python " + module_name +  " " + args_string + "\n")
+                            output_lines.append("python " + module_name +  " " + args_string)
                         
                         for line in new_output_lines:
                             output_lines.append(line)
-                        
-                        output_lines.append("\n")
+                            
+                        if batch_args_count != len(batch_args_list):
+                            output_lines.append("")
                     
                     else:
                         logging.error("Cannot run batch commands with batch "
@@ -315,7 +320,7 @@ def get_totalcount_output(text, element_type, number_to_display):
     return generate_ranked_list_output(ranked_elements, number_to_display)
 
 def get_count_output(text, element_type, element_to_count):
-    return [str(text.count_occurences(element_to_count, element_type)), "\n"]
+    return [str(text.count_occurences(element_to_count, element_type))]
 
 def get_match_output(text, element_type, elements_to_match, number_to_display):
     match_seperator = "~"
@@ -344,7 +349,7 @@ def generate_ranked_list_output(rank_list, number_to_show):
         (element, count) = rank_list[i]
         
         if count != 0:
-            output_lines.append(str(count) + ": " + str(element) + "\n")
+            output_lines.append(str(count) + ": " + str(element))
     
     return output_lines
 
@@ -355,11 +360,14 @@ def get_poem_output(text, syllables_pattern, number_to_generate):
     output_lines = []
     
     poems = text.generate_poems(syllables_pattern, number_to_generate)
+    poem_count = 0
     for poem in poems:
+        poem_count += 1
         for line in poem:
-            output_lines.append(line + "\n")
-    
-        output_lines.append("\n")
+            output_lines.append(line)
+        
+        if poem_count != len(poems):
+            output_lines.append("")
     
     return output_lines
 
@@ -376,7 +384,7 @@ def output_to_file(filename, output_lines):
             os.makedirs(output_directory)
     
     with io.open(filename, 'w') as file:
-        file.writelines(output_lines)
+        file.writelines([line + "\n" for line in output_lines])
 
 if __name__== "__main__":
         main()
