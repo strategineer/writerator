@@ -359,6 +359,8 @@ def get_poem_output(text, syllables_pattern, number_to_generate):
         for line in poem:
             output_lines.append(line + "\n")
     
+        output_lines.append("\n")
+    
     return output_lines
 
 
