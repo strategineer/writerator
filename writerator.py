@@ -19,6 +19,7 @@ import logging
 import sys
 import os
 import ntpath
+import shlex
 
 import argparse
 import configparser
@@ -52,7 +53,7 @@ def main():
     
     text = Text(filename_in)
     
-    output_lines = get_output(text, args, batch_config)
+    output_lines = get_output(text, parser, batch_config)
     
     if args.output:
         output_to_file(filename_out, output_lines)
@@ -107,6 +108,11 @@ def make_parser(config):
     batch_parser.add_argument("-l", "--list", action="store_true",
                               help="""List the names of the available batch
                               command groupings.""")
+    
+    batch_parser.add_argument("-c", "--showcommand", action="store_false",
+                              help="""Chooses to either show or not show the
+                               commands before their output when running a
+                                command grouping. Defaults to show.""")
     
     
     count_parser = subparsers.add_parser("count", help=
@@ -182,7 +188,7 @@ def get_filenames(settings_config, filename_in):
     return (settings_config['folders']['InputFolder'] + os.sep + filename_in, 
             settings_config['folders']['OutputFolder'] + os.sep + filename_out)
 
-def get_output(text, args, batch_config):
+def get_output(text, parser, batch_config, args_list=[]):
     def expand_type(code):
         """Expands one letter element type code to full word"""
         if code == 'c':
@@ -194,7 +200,7 @@ def get_output(text, args, batch_config):
         
         else:
             logging.error("No such element type cannot expand: " + code)
-            sys.exit(0)
+            sys.exit(1)
     
     def get_syllable_pattern(name):
         #Shakespeare Sonnet
@@ -206,13 +212,19 @@ def get_output(text, args, batch_config):
 
     def get_repeat_syllable_pattern(number_of_syllables, times_to_repeat):
         repeat_pattern = []
-        for i in range(0, times_to_repeat):
+        for _ in range(0, times_to_repeat):
             repeat_pattern.append(number_of_syllables)
         
         return repeat_pattern
     
     commands = ['poem', 'count', 'match', 'info', 'batch']
-
+    
+    if args_list:
+        args = parser.parse_args(args_list)
+        logging.debug(args)
+    else:
+        args = parser.parse_args()
+    
     if args.command == commands[1]:
         if args.count:
             (element_type, element_to_count) = (expand_type(args.type) , args.count)
@@ -244,7 +256,7 @@ def get_output(text, args, batch_config):
     elif args.command == commands[3]:
         if args.general:
             logging.error("info -g not implemented")
-            sys.exit(0)
+            sys.exit(1)
         
         elif args.test == 'g':
             test = args.test
@@ -256,24 +268,33 @@ def get_output(text, args, batch_config):
             if args.run in batch_config:
                 output_lines = []
                 for batch_args in get_batch_args_list(batch_config, args.run):
-                    command = "python " + module_name + " " + args.file_in + " " + batch_args
+                    args_string = args.file_in + " " + batch_args
                     
-                    #shell=True for echo to work on Windows
-                    process1 = subprocess.Popen("echo " + command, stdout=subprocess.PIPE, shell=True)
-                    for line in process1.stdout:
-                        output_lines.append(line.rstrip().decode("utf-8"))
+                    args_list = shlex.split(args_string)
                     
-                    process2 = subprocess.Popen(command, stdout=subprocess.PIPE)
-                    for line in process2.stdout:
-                        output_lines.append(line.rstrip().decode("utf-8"))
+                    if "batch" not in args_list:
+                             
+                        new_output_lines = get_output(text, parser, batch_config, args_list)
+                        
+                        if args.showcommand:
+                            output_lines.append("python " + module_name +  " " + args_string + "\n")
+                        
+                        for line in new_output_lines:
+                            output_lines.append(line)
+                        
+                        output_lines.append("\n")
                     
-                    output_lines.append(" ")
-                
+                    else:
+                        logging.error("Cannot run batch commands with batch "
+                        + "command groupings.")
+                        logging.error("Please remove offending command from batch.ini")
+                        sys.exit(1)
+                    
                 return output_lines
             
             else:
                 logging.error("No such batch grouping : " + args.run )
-                sys.exit(0)
+                sys.exit(1)
         
         elif args.list:
             output_lines = []
@@ -294,10 +315,7 @@ def get_totalcount_output(text, element_type, number_to_display):
     return generate_ranked_list_output(ranked_elements, number_to_display)
 
 def get_count_output(text, element_type, element_to_count):
-    output = []
-    
-    output.append(text.count_occurences(element_to_count, element_type))
-    return output
+    return [str(text.count_occurences(element_to_count, element_type)), "\n"]
 
 def get_match_output(text, element_type, elements_to_match, number_to_display):
     match_seperator = "~"
@@ -331,7 +349,7 @@ def generate_ranked_list_output(rank_list, number_to_show):
     return output_lines
 
 def get_Gunning_output(text):
-    return [text.calculate_Gunning_Fog_Index()]
+    return [str(text.calculate_Gunning_Fog_Index())]
 
 def get_poem_output(text, syllables_pattern, number_to_generate):
     output_lines = []
@@ -340,8 +358,6 @@ def get_poem_output(text, syllables_pattern, number_to_generate):
     for poem in poems:
         for line in poem:
             output_lines.append(line + "\n")
-        
-        output_lines.append("\n")
     
     return output_lines
 
@@ -361,9 +377,9 @@ def output_to_file(filename, output_lines):
         file.writelines(output_lines)
 
 if __name__== "__main__":
-        #main()
-               
-        cProfile.run("main()", "main_stats.prof")
-        
-        p = pstats.Stats('main_stats.prof')
-        p.strip_dirs().sort_stats('time').print_stats(5)
+        main()
+#               
+#        cProfile.run("main()", "main_stats.prof")
+#        
+#        p = pstats.Stats('main_stats.prof')
+#        p.strip_dirs().sort_stats('time').print_stats(5)
