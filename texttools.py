@@ -16,6 +16,9 @@ import logging
 import sys
 from functools import total_ordering
 
+from hyphen import Hyphenator, dict_info
+from hyphen.dictools import *
+
 import re
 import os
 import io
@@ -85,6 +88,8 @@ class Sentence(BasicText):
 class Word(BasicText):
     """Represents a Word."""
     
+    h_en = Hyphenator('en_US')
+    
     def __init__(self, text):
         """Initializes a Word."""
         self.text = text
@@ -96,44 +101,14 @@ class Word(BasicText):
     def countSyllables(self):
         """
             Counts the number of syllables for an English language Word.
-            
-            ~85% Accuracy apparently, but works on all words. Not only words in
-            the dictionary
-            
-            COPYRIGHT Greg Fast, Dispenser (python port)
-
-            Better Algorithm: http://pypi.python.org/pypi/PyHyphen/2.0.1
         """
-        SubSyl = ('cial','tia','cius','cious','giu','ion','iou','sia$','.ely$',)
-        AddSyl = ('ia','riet','dien','iu','io','ii','[aeiouym]bl$','[aeiou]{3}',
-                  '^mc','ism$','([^aeiouy])\1l$', '[^l]lien','^coa[dglx].',
-                  '[^gq]ua[^auieo]','dnt$',)
-
-        word = self.text.lower()
-        word = word.replace('\'', '')
-        word = re.sub(r'e$', '', word);
+        syllables = Word.h_en.syllables(self.text)
         
-        scrugg = re.split(r'[^aeiouy]+', word);
-        for i in scrugg:
-            if not i:
-                scrugg.remove(i)
+        if len(syllables) != 0:
+            return len(syllables)
         
-        syl = 0;
-        for syll in SubSyl:
-            if re.search(syll, word):
-                syl -= 1
-        
-        for syll in AddSyl:
-            if re.search(syll, word):
-                syl += 1
-                
-        if len(word)==1:
-            syl +=1    # 'x'
-        
-        # count vowel groupings
-        syl += len(scrugg)
-        
-        return (syl or 1)    # got no vowels? ("the", "crwth")
+        else:
+            return 1
     
     def istitle(self):
         """ Determines if first letter of a Word is capitalized"""
