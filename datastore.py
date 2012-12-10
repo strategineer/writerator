@@ -77,7 +77,7 @@ class DataStore(object):
         
             else:
                 logging.error("Key not contained within txt database: " + key )
-                sys.exit(0)
+                sys.exit(1)
     
     @staticmethod
     def is_to_be_computed(filename):
