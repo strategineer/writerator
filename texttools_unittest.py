@@ -16,7 +16,7 @@
 
 import unittest
 
-from texttools import *
+from texttools import Sentence, Word
 
 
 class TestTextTools(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestTextTools(unittest.TestCase):
         self.assertEqual(self.word.text, "Bill")
         self.assertEqual(self.sentence.text, "Bill is cool.")
         
-    def test_count_syllables(self):
+    def test_Word_count_syllables(self):
         self.word.text = "Bill"
         
         self.assertTrue(self.word.countSyllables() == 1)
@@ -44,6 +44,13 @@ class TestTextTools(unittest.TestCase):
         self.assertTrue(self.word.count("i") == 1)
         self.assertTrue(self.word.count("l") == 2)
         self.assertTrue(self.word.count("ll") == 1)
-
+        
+    def test_Word_istitle(self):
+        self.word.text = "Bob"
+        self.assertTrue(self.word.istitle())
+        
+        self.word.text = "appple"
+        self.assertFalse(self.word.istitle())
+        
 if __name__ == '__main__':
     unittest.main()
