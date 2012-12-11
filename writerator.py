@@ -35,6 +35,11 @@ def main():
     #Runs Unit-Tests
     subprocess.call("python texttools_unittest.py -q")
     
+    if "hyphen" not in sys.modules:
+        logging.warning("PyHyphen has not been detected." 
+                        + " Syllable counting algorithm will be noticeably crappier.")
+        
+
     settings_config = configparser.ConfigParser()
     settings_config.read('config' + os.sep + 'settings.ini')
     

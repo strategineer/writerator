@@ -92,9 +92,6 @@ class Word(BasicText):
     
     if "hyphen" in sys.modules:
         h_en = Hyphenator('en_US')
-    else:
-        logging.warning("PyHyphen has not been detected." 
-                        + " Syllable counting algorithm will be noticeably crappier.")
     
     def __init__(self, text):
         """Initializes a Word."""
