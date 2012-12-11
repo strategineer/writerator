@@ -391,10 +391,13 @@ def output_to_file(filename, output_lines):
     with io.open(filename, 'w') as file:
         file.writelines([line + "\n" for line in output_lines])
 
+def profile_main():    
+    cProfile.run("main()", "main_stats.prof")
+    
+    p = pstats.Stats('main_stats.prof')
+    p.strip_dirs().sort_stats('time').print_stats(5)
+    
 if __name__== "__main__":
-        main()
-#               
-#        cProfile.run("main()", "main_stats.prof")
-#        
-#        p = pstats.Stats('main_stats.prof')
-#        p.strip_dirs().sort_stats('time').print_stats(5)
+        #main()
+        
+        profile_main()
