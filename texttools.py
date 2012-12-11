@@ -16,9 +16,6 @@ import logging
 import sys
 from functools import total_ordering
 
-from hyphen import Hyphenator, dict_info
-from hyphen.dictools import *
-
 import re
 import os
 import io
@@ -26,6 +23,11 @@ import random
 from collections import Counter
 
 from datastore import DataStore
+
+try:
+    from hyphen import Hyphenator
+except ImportError:
+    pass
 
 @total_ordering
 class BasicText(object):
@@ -88,7 +90,11 @@ class Sentence(BasicText):
 class Word(BasicText):
     """Represents a Word."""
     
-    h_en = Hyphenator('en_US')
+    if "hyphen" in sys.modules:
+        h_en = Hyphenator('en_US')
+    else:
+        logging.warning("PyHyphen has not been detected." 
+                        + " Syllable counting algorithm will be noticeably crappier.")
     
     def __init__(self, text):
         """Initializes a Word."""
@@ -101,14 +107,52 @@ class Word(BasicText):
     def countSyllables(self):
         """
             Counts the number of syllables for an English language Word.
+            
+            Uses PyHyphen if found on system. Otherwise uses Greg Fast's algo
+            
+            COPYRIGHT Greg Fast, Dispenser (python port)
         """
-        syllables = Word.h_en.syllables(self.text)
-        
-        if len(syllables) != 0:
-            return len(syllables)
+        if "hyphen" in sys.modules:
+            syllables = Word.h_en.syllables(self.text)
+            
+            if len(syllables) != 0:
+                return len(syllables)
+            
+            else:
+                return 1
         
         else:
-            return 1
+                
+            SubSyl = ('cial','tia','cius','cious','giu','ion','iou','sia$','.ely$',)
+            AddSyl = ('ia','riet','dien','iu','io','ii','[aeiouym]bl$','[aeiou]{3}',
+                      '^mc','ism$','([^aeiouy])\1l$', '[^l]lien','^coa[dglx].',
+                      '[^gq]ua[^auieo]','dnt$',)
+    
+            word = self.text.lower()
+            word = word.replace('\'', '')
+            word = re.sub(r'e$', '', word);
+            
+            scrugg = re.split(r'[^aeiouy]+', word);
+            for i in scrugg:
+                if not i:
+                    scrugg.remove(i)
+            
+            syl = 0;
+            for syll in SubSyl:
+                if re.search(syll, word):
+                    syl -= 1
+            
+            for syll in AddSyl:
+                if re.search(syll, word):
+                    syl += 1
+                    
+            if len(word)==1:
+                syl +=1    # 'x'
+            
+            # count vowel groupings
+            syl += len(scrugg)
+            
+            return (syl or 1)    # got no vowels? ("the", "crwth")
     
     def istitle(self):
         """ Determines if first letter of a Word is capitalized"""
@@ -336,13 +380,3 @@ class Text(BasicText):
                 adverbs.append(word)
         
         return adverbs
-
-def main():
-    for word in ('honour', 'decode', 'decoded', 'oiseau', 'mathematical',
-                 'abe','hippopotamus', 'reincarnation', 'information'):
-        word_obj = Word(word)
-        print(str(word_obj) + " " + str(word_obj.countSyllables()))
-
-
-if __name__== "__main__":
-    main()
