@@ -206,22 +206,13 @@ class Text(BasicText):
         words_tpl = (Text._element_types[1], words)
         data_tuples.append(words_tpl)
         
-        words_set_tpl = (Text._element_types[1] + "_set", set(words))
-        data_tuples.append(words_set_tpl)
-        
         sentences = self._split_by_element_type(Text._element_types[2])
         sentences_tpl = (Text._element_types[2], sentences)
         data_tuples.append(sentences_tpl)
         
-        sentences_set_tpl = (Text._element_types[2] + "_set", set(sentences))
-        data_tuples.append(sentences_set_tpl)
-        
         characters = self._split_by_element_type(Text._element_types[0])
         characters_tpl = (Text._element_types[0], characters)
         data_tuples.append(characters_tpl)
-        
-        characters_set_tpl = (Text._element_types[0] + "_set", set(characters))
-        data_tuples.append(characters_set_tpl)
         
         return data_tuples
 
@@ -275,7 +266,7 @@ class Text(BasicText):
                 elif syllable_count > syllables_needed:
                     random_words = []
         
-        unique_words = list(self.ds[Text._element_types[1] + "_set"])
+        unique_words = list(set(self.ds[Text._element_types[1]]))
         
         poems = []
         for _ in range(0, int(number_to_generate)):
@@ -327,7 +318,7 @@ class Text(BasicText):
         assert isinstance(matches_to_check, list)
         
         if element_type in Text._element_types:
-            set_of_elements = self.ds[element_type + "_set"]
+            set_of_elements = set(self.ds[element_type])
             
             ranked_by_matches = []
             
