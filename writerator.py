@@ -226,7 +226,6 @@ def get_output(text, parser, batch_config, args_list=[]):
     
     if args_list:
         args = parser.parse_args(args_list)
-        logging.debug(args)
     else:
         args = parser.parse_args()
     
