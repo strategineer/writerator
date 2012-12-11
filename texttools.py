@@ -151,8 +151,8 @@ class Word(BasicText):
             
             return (syl or 1)    # got no vowels? ("the", "crwth")
     
-    def title(self):
-        return self.text.title()
+    def capitalize(self):
+        return self.text.capitalize()
     
     def istitle(self):
         """ Determines if first letter of a Word is capitalized"""
@@ -260,8 +260,8 @@ class Text(BasicText):
                 
                 syllable_count = sum([word.countSyllables() for word in random_words])
                 if syllable_count == syllables_needed:
-                    new_line = " ".join([str(word) if word != random_words[0] else str(word.title()) for word in random_words])
-                    return new_line
+                    new_line = " ".join([str(word) for word in random_words])
+                    return new_line.lower().capitalize()
                 
                 elif syllable_count < syllables_needed:
                     pass
