@@ -110,10 +110,10 @@ class Word(BasicText):
             COPYRIGHT Greg Fast, Dispenser (python port)
         """
         if "hyphen" in sys.modules:
-            syllables = Word.h_en.syllables(self.text)
+            num_of_syllables = len(Word.h_en.syllables(self.text))
             
-            if len(syllables) != 0:
-                return len(syllables)
+            if num_of_syllables != 0:
+                return num_of_syllables
             
             else:
                 return 1
