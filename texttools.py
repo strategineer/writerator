@@ -100,7 +100,7 @@ class Word(BasicText):
     @BasicText.text.setter
     def text(self, new_text):
         self._text = new_text.strip(""" (),.?!;:\"\'""")
-
+    
     def countSyllables(self):
         """
             Counts the number of syllables for an English language Word.
@@ -154,7 +154,7 @@ class Word(BasicText):
     def capitalize(self):
         return self.text.capitalize()
     
-    def istitle(self):
+    def iscapitalize(self):
         """ Determines if first letter of a Word is capitalized"""
         return self.text[0].isupper()
 
@@ -286,7 +286,7 @@ class Text(BasicText):
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
         words = self.ds[Text._element_types[1]]
-        complex_words = [word for word in words if word.countSyllables() >= 3 and not word.istitle()]
+        complex_words = [word for word in words if word.countSyllables() >= 3 and not word.iscapitalize()]
         
         number_of_words = len(words)
         number_of_complex_words = len(complex_words)
