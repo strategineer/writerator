@@ -262,17 +262,20 @@ class Text(BasicText):
                 elif syllable_count > syllables_needed:
                     random_words = []
         
-        unique_words = list(set(self.ds[Text._element_types[1]]))
-        
-        poems = []
-        for _ in range(0, int(number_to_generate)):
+        def generate_poem():
             poem_lines = []
             
             for syllables_needed in syllables_per_line:                    
                 poem_line = generate_poem_line(unique_words, int(syllables_needed))
                 poem_lines.append(poem_line)
+            
+            return poem_lines
+            
+        unique_words = list(set(self.ds[Text._element_types[1]]))
         
-            poems.append(poem_lines)
+        poems = []
+        for _ in range(0, int(number_to_generate)):
+            poems.append(generate_poem())
             
         return poems
     
