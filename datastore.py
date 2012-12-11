@@ -67,7 +67,7 @@ class DataStore(object):
         data_filename = directory + os.sep + name
         return data_filename
         
-    def get_data_from_db(self, key):
+    def __getitem__(self, key):
         """Get value associated to a key in the database"""
         with closing(shelve.open(DataStore.__get_data_filename(self.filename))) as self.db:
             if key in self.db.keys():

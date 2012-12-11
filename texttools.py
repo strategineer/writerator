@@ -275,7 +275,7 @@ class Text(BasicText):
                 elif syllable_count > syllables_needed:
                     random_words = []
         
-        unique_words = list(self.ds.get_data_from_db(Text._element_types[1] + "_set"))
+        unique_words = list(self.ds[Text._element_types[1] + "_set"])
         
         poems = []
         for _ in range(0, int(number_to_generate)):
@@ -292,12 +292,12 @@ class Text(BasicText):
     
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
-        words = self.ds.get_data_from_db(Text._element_types[1])
+        words = self.ds[Text._element_types[1]]
         complex_words = [word for word in words if word.countSyllables() >= 3 and not word.istitle()]
         
         number_of_words = len(words)
         number_of_complex_words = len(complex_words)
-        number_of_sentences = len(self.ds.get_data_from_db(Text._element_types[2]))
+        number_of_sentences = len(self.ds[Text._element_types[2]])
         
         return (0.4) * ( (number_of_words / number_of_sentences) 
                          + 100 * (number_of_complex_words / number_of_words) )
@@ -305,7 +305,7 @@ class Text(BasicText):
     def _make_occurences_Counter(self, element_type):
         """Returns a Counter with the elements decided by kind, either
          words, characters or sentences as keys from within a Text."""
-        elements = self.ds.get_data_from_db(element_type)    
+        elements = self.ds[element_type]    
         return Counter( [str(x) for x in elements] )
         
     def count_occurences(self, element_to_count, element_type):
@@ -327,7 +327,7 @@ class Text(BasicText):
         assert isinstance(matches_to_check, list)
         
         if element_type in Text._element_types:
-            set_of_elements = self.ds.get_data_from_db(element_type + "_set")
+            set_of_elements = self.ds[element_type + "_set"]
             
             ranked_by_matches = []
             
@@ -369,7 +369,7 @@ class Text(BasicText):
 
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""
-        words = self.ds.get_data_from_db(Text._element_types[1])
+        words = self.ds[Text._element_types[1]]
         adverbs = []
         
         for word in words:
