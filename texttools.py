@@ -99,7 +99,7 @@ class Word(BasicText):
     
     @BasicText.text.setter
     def text(self, new_text):
-        self._text = new_text.strip(""" ,.?!;:\"\'""")
+        self._text = new_text.strip(""" (),.?!;:\"\'""")
 
     def countSyllables(self):
         """
@@ -150,6 +150,9 @@ class Word(BasicText):
             syl += len(scrugg)
             
             return (syl or 1)    # got no vowels? ("the", "crwth")
+    
+    def title(self):
+        return self.text.title()
     
     def istitle(self):
         """ Determines if first letter of a Word is capitalized"""
@@ -257,7 +260,7 @@ class Text(BasicText):
                 
                 syllable_count = sum([word.countSyllables() for word in random_words])
                 if syllable_count == syllables_needed:
-                    new_line = " ".join([str(word) for word in random_words]).capitalize()
+                    new_line = " ".join([str(word) if word != random_words[0] else str(word.title()) for word in random_words])
                     return new_line
                 
                 elif syllable_count < syllables_needed:
@@ -274,7 +277,6 @@ class Text(BasicText):
             
             for syllables_needed in syllables_per_line:                    
                 poem_line = generate_poem_line(unique_words, int(syllables_needed))
-                    
                 poem_lines.append(poem_line)
         
             poems.append(poem_lines)
