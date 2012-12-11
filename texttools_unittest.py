@@ -62,10 +62,10 @@ class TestTextTools(unittest.TestCase):
         
     def test_Word_istitle(self):
         self.word.text = "Bob"
-        self.assertTrue(self.word.iscapitalize())
+        self.assertTrue(self.word.text.istitle())
         
         self.word.text = "apple"
-        self.assertFalse(self.word.iscapitalize())
+        self.assertFalse(self.word.text.istitle())
     
     def test_Word_eq(self):
         test_word = " Bill ., "
