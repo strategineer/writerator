@@ -397,6 +397,6 @@ def profile_main():
     p.strip_dirs().sort_stats('time').print_stats(5)
     
 if __name__== "__main__":
-        #main()
+        main()
         
-        profile_main()
+        #profile_main()
