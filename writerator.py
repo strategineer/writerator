@@ -33,7 +33,7 @@ from texttools import Text
 
 def main():
     #Runs Unit-Tests
-    subprocess.call("python texttools_unittest.py -q")
+    #subprocess.call("python texttools_unittest.py -q")
     
     if "hyphen" not in sys.modules:
         logging.warning("PyHyphen has not been detected." 
