@@ -54,16 +54,19 @@ def main():
     
     logging.debug(str(args))
     
-    (filename_in, filename_out) = get_filenames(settings_config, args.file_in)
+    if(args.infile.name == "<stdin>" ):
+        inFilename=settings_config['folders']['InputFolder'] + os.sep + 'stdin.txt'
+        with args.infile as f, open(inFilename, 'w') as w:
+            for line in f:
+                w.write(line);
+    else:
+        inFilename=args.infile.name
     
-    text = Text(filename_in)
+    text = Text(inFilename)
     
     output_lines = get_output(text, parser, batch_config)
     
-    if args.output:
-        output_to_file(filename_out, output_lines)
-    else:
-        output_to_console(output_lines)
+    output(args.outfile, output_lines)
 
 def get_batch_args_list(config, batch_name):
     params_list = []
@@ -77,14 +80,13 @@ def make_parser(config):
     main_parser = argparse.ArgumentParser()
     
     
-    main_parser.add_argument("file_in", help="filename of input file")
+    main_parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
+                        default=sys.stdin)
+    main_parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
+                        default=sys.stdout)
     
     main_parser.add_argument("-d", "--debug", 
                         help="displays logging debug messages.",
-                        action="store_true")
-    
-    main_parser.add_argument("-o", "--output",
-                        help="""writes output to a .txt file""",
                         action="store_true")
     
     type_parent_parser = argparse.ArgumentParser(add_help=False)
@@ -375,19 +377,8 @@ def get_poem_output(text, syllables_pattern, number_to_generate):
     
     return output_lines
 
-
-def output_to_console(output_lines):
-    for line in output_lines:
-        print(line)
-
-def output_to_file(filename, output_lines):
-    name = ntpath.basename(filename)
-    
-    output_directory = filename[:len(filename) - len(name)]
-    if not os.path.exists(output_directory):
-            os.makedirs(output_directory)
-    
-    with io.open(filename, 'w') as file:
+def output(outfile, output_lines):
+    with outfile as file:
         file.writelines([line + "\n" for line in output_lines])
 
 def profile_main():    
