@@ -1,34 +1,21 @@
 #!/usr/bin/env python3
 
-import io
+from texttools import Text
+
 import logging
 import sys
 import os
-import ntpath
 import shlex
 
 import argparse
 import configparser
-import subprocess
-
-import cProfile
-import pstats
-
-from texttools import Text
-
 
 def main():
-    #Runs Unit-Tests
-    #subprocess.call("python texttools_unittest.py -q")
-
     if "hyphen" not in sys.modules:
         logging.warning("PyHyphen has not been detected."
                         + " Syllable counting algorithm will be noticeably crappier.")
-
-
     settings_config = configparser.ConfigParser()
     settings_config.read('config' + os.sep + 'settings.ini')
-
     batch_config = configparser.ConfigParser()
     batch_config.read('config' + os.sep + 'batch.ini')
 
@@ -52,15 +39,8 @@ def main():
 
     output_lines = get_output(text, parser, batch_config)
 
-    output(args.outfile, output_lines)
-
-def get_batch_args_list(config, batch_name):
-    params_list = []
-    for test_name in config[batch_name]:
-        params_list.append(config[batch_name][test_name])
-
-    return params_list
-
+    with args.outfile as file:
+        file.writelines([line + "\n" for line in output_lines])
 
 def make_parser(config):
     main_parser = argparse.ArgumentParser()
@@ -173,14 +153,6 @@ def set_logging_level(bool_option):
     else:
         logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 
-def get_filenames(settings_config, filename_in):
-
-    (name, extension) = filename_in.split(".")
-    filename_out = name + "_out" + "." + extension
-
-    return (settings_config['folders']['InputFolder'] + os.sep + filename_in,
-            settings_config['folders']['OutputFolder'] + os.sep + filename_out)
-
 def get_output(text, parser, batch_config, args_list=[]):
     def expand_type(code):
         """Expands one letter element type code to full word"""
@@ -220,30 +192,45 @@ def get_output(text, parser, batch_config, args_list=[]):
     if args.command == commands[1]:
         if args.count:
             (element_type, element_to_count) = (expand_type(args.type) , args.count)
-            return get_count_output(text, element_type, element_to_count)
+            return [str(text.count_occurences(element_to_count, element_type))]
 
         elif args.totalcount:
             (element_type, number_to_display) = (expand_type(args.type), args.show)
-            return get_totalcount_output(text, element_type, number_to_display)
+            ranked_elements = text.rank_by_total_count(element_type)
+            return generate_ranked_list_output(ranked_elements, number_to_display)
 
     elif args.command == commands[2]:
         (element_type, elements_to_match,
          number_to_display) = (expand_type(args.type), args.patterns , args.show)
-        return get_match_output(text, element_type, elements_to_match,
-                                    number_to_display)
+        match_seperator = "~"
+        if match_seperator in elements_to_match:
+            elements_to_match = elements_to_match.split(match_seperator)
+        else:
+            elements_to_match = [elements_to_match]
+        print(element_type)
+        ranked_elements = text.rank_by_number_of_matches( elements_to_match , element_type )
+        return generate_ranked_list_output(ranked_elements, number_to_display)
 
     elif args.command == commands[0]:
-
         if args.syllables:
             (syllables_pattern, number_to_generate) = (args.syllables, args.show)
-
         elif args.preset:
             (syllables_pattern, number_to_generate) = (get_syllable_pattern(args.preset), args.show)
-
         elif args.shortcut:
             (syllables_pattern, number_to_generate) = (get_repeat_syllable_pattern(args.shortcut[0], args.shortcut[1]), args.show)
-
-        return get_poem_output(text, syllables_pattern, number_to_generate)
+        else:
+            logging.error("More args are required.")
+            sys.exit(1)
+        output_lines = []
+        poems = text.generate_poems(syllables_pattern, number_to_generate)
+        poem_count = 0
+        for poem in poems:
+            poem_count += 1
+            for line in poem:
+                output_lines.append(line)
+            if poem_count != len(poems):
+                output_lines.append("")
+        return output_lines
 
     elif args.command == commands[3]:
         if args.general:
@@ -251,15 +238,17 @@ def get_output(text, parser, batch_config, args_list=[]):
             sys.exit(1)
 
         elif args.test == 'g':
-            test = args.test
-            return get_readability_test_output(text, test)
+            return [str(text.calculate_Gunning_Fog_Index())]
 
     elif args.command == commands[4]:
         module_name = sys.argv[0]
         if args.run:
             if args.run in batch_config:
                 output_lines = []
-                batch_args_list = get_batch_args_list(batch_config, args.run)
+                batch_args_list = []
+                for test_name in batch_config[args.run]:
+                    batch_args_list.append(config[args.run][test_name])
+
                 batch_args_count = 0
                 for batch_args in batch_args_list:
                     batch_args_count += 1
@@ -301,79 +290,14 @@ def get_output(text, parser, batch_config, args_list=[]):
 
             return output_lines
 
-
-def get_readability_test_output(text, test):
-    if test == 'g':
-        return get_Gunning_output(text)
-
-def get_totalcount_output(text, element_type, number_to_display):
-    ranked_elements = text.rank_by_total_count(element_type)
-
-    return generate_ranked_list_output(ranked_elements, number_to_display)
-
-def get_count_output(text, element_type, element_to_count):
-    return [str(text.count_occurences(element_to_count, element_type))]
-
-def get_match_output(text, element_type, elements_to_match, number_to_display):
-    match_seperator = "~"
-
-    if match_seperator in elements_to_match:
-        elements_to_match = elements_to_match.split(match_seperator)
-    else:
-        elements_to_match = [elements_to_match]
-
-    ranked_elements = text.rank_by_number_of_matches( elements_to_match , element_type )
-
-    return generate_ranked_list_output(ranked_elements, number_to_display)
-
-def generate_ranked_list_output(rank_list, number_to_show):
-
-    def get_last_index_for_output(ranked_elements, number_to_display):
-        if len(ranked_elements) < number_to_display:
-            return len(ranked_elements)
-        else:
-            return number_to_display
-
-    last_index = get_last_index_for_output(rank_list, number_to_show)
-
+def generate_ranked_list_output(ranked_elements, number_to_display):
+    last_index = len(ranked_elements) if len(ranked_elements) < number_to_display else number_to_display
     output_lines = []
     for i in range(0, last_index):
-        (element, count) = rank_list[i]
-
+        (element, count) = ranked_elements[i]
         if count != 0:
             output_lines.append(str(count) + ": " + str(element))
-
     return output_lines
-
-def get_Gunning_output(text):
-    return [str(text.calculate_Gunning_Fog_Index())]
-
-def get_poem_output(text, syllables_pattern, number_to_generate):
-    output_lines = []
-
-    poems = text.generate_poems(syllables_pattern, number_to_generate)
-    poem_count = 0
-    for poem in poems:
-        poem_count += 1
-        for line in poem:
-            output_lines.append(line)
-
-        if poem_count != len(poems):
-            output_lines.append("")
-
-    return output_lines
-
-def output(outfile, output_lines):
-    with outfile as file:
-        file.writelines([line + "\n" for line in output_lines])
-
-def profile_main():
-    cProfile.run("main()", "main_stats.prof")
-
-    p = pstats.Stats('main_stats.prof')
-    p.strip_dirs().sort_stats('time').print_stats(5)
 
 if __name__== "__main__":
         main()
-
-        #profile_main()
