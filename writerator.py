@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
-from texttools import Text
-
 import logging
 import sys
 import os
 import shlex
-
 import argparse
 import configparser
 
+from texttools import Text
+
 def main():
-    if "hyphen" not in sys.modules:
-        logging.warning("PyHyphen has not been detected."
-                        + " Syllable counting algorithm will be noticeably crappier.")
     settings_config = configparser.ConfigParser()
     settings_config.read('config' + os.sep + 'settings.ini')
     batch_config = configparser.ConfigParser()

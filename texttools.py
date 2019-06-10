@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import logging
 import sys
 from functools import total_ordering
@@ -8,12 +10,9 @@ import io
 import random
 from collections import Counter
 
-from datastore import DataStore
+from hyphen import Hyphenator
 
-try:
-    from hyphen import Hyphenator
-except ImportError:
-    pass
+from datastore import DataStore
 
 @total_ordering
 class BasicText(object):
@@ -88,54 +87,11 @@ class Word(BasicText):
         self._text = new_text.strip(""" (),.?!;:\"\'""")
 
     def countSyllables(self):
-        """
-            Counts the number of syllables for an English language Word.
-
-            Uses PyHyphen if found on system. Otherwise uses Greg Fast's algo
-
-            COPYRIGHT Greg Fast, Dispenser (python port)
-        """
-        if "hyphen" in sys.modules:
-            num_of_syllables = len(Word.h_en.syllables(self.text))
-
-            if num_of_syllables != 0:
-                return num_of_syllables
-
-            else:
-                return 1
-
-        else:
-
-            SubSyl = ('cial','tia','cius','cious','giu','ion','iou','sia$','.ely$',)
-            AddSyl = ('ia','riet','dien','iu','io','ii','[aeiouym]bl$','[aeiou]{3}',
-                      '^mc','ism$','([^aeiouy])\1l$', '[^l]lien','^coa[dglx].',
-                      '[^gq]ua[^auieo]','dnt$',)
-
-            word = self.text.lower()
-            word = word.replace('\'', '')
-            word = re.sub(r'e$', '', word);
-
-            scrugg = re.split(r'[^aeiouy]+', word);
-            for i in scrugg:
-                if not i:
-                    scrugg.remove(i)
-
-            syl = 0;
-            for syll in SubSyl:
-                if re.search(syll, word):
-                    syl -= 1
-
-            for syll in AddSyl:
-                if re.search(syll, word):
-                    syl += 1
-
-            if len(word)==1:
-                syl +=1    # 'x'
-
-            # count vowel groupings
-            syl += len(scrugg)
-
-            return (syl or 1)    # got no vowels? ("the", "crwth")
+        """ Counts the number of syllables for an English language Word.  """
+        n_syllables = len(Word.h_en.syllables(self.text))
+        if n_syllables != 0:
+            return n_syllables
+        return 1
 
     def isAdverb(self):
         """Determines whether word is an adverb."""

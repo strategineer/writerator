@@ -1,11 +1,10 @@
+#!/usr/bin/env python3
+
 import logging
 import sys
 import datetime
 import shelve
-
 from contextlib import closing
-
-import ntpath
 import os
 
 class DataStore(object):
@@ -43,13 +42,10 @@ class DataStore(object):
             SIDE EFFECT: builds directories for the files if they don't
              exist as well
         """
-        (name, extension) = ntpath.basename(filename).split(".")
-
+        (name, extension) = os.path.basename(filename).split(".")
         directory = "data" + os.sep + name
-
         if not os.path.exists(directory):
             os.makedirs(directory)
-
         data_filename = directory + os.sep + name
         return data_filename
 
@@ -58,9 +54,7 @@ class DataStore(object):
         with closing(shelve.open(DataStore.__get_data_filename(self.filename))) as self.db:
             if key in self.db.keys():
                 value = self.db[key]
-
                 return value
-
             else:
                 logging.error("Key not contained within txt database: " + key )
                 sys.exit(1)
@@ -83,7 +77,6 @@ class DataStore(object):
 
 def main():
     pass
-
 
 if __name__== "__main__":
     main()
