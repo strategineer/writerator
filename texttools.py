@@ -14,6 +14,8 @@ from hyphen import Hyphenator
 
 from datastore import DataStore
 
+MAX_POEM_LINE_ITERATIONS = 10000
+
 @total_ordering
 class BasicText(object):
     """Represents a BasicText used for inheritance."""
@@ -185,37 +187,36 @@ class Text(BasicText):
 
     def generate_poems(self, syllables_per_line, number_to_generate):
         """Generate poems using the words contained within the Text"""
-        def generate_poem_line(set_of_words, syllables_needed):
-            random_words = []
-            while True:
-                random_words.append(random.choice(set_of_words))
-
-                syllable_count = sum([word.countSyllables() for word in random_words])
-                if syllable_count == syllables_needed:
-                    new_line = " ".join([str(word) for word in random_words])
-                    return new_line.lower().capitalize()
-
-                elif syllable_count < syllables_needed:
-                    pass
-
-                elif syllable_count > syllables_needed:
-                    random_words = []
-
-        def generate_poem():
-            poem_lines = []
-
-            for syllables_needed in syllables_per_line:
-                poem_line = generate_poem_line(unique_words, int(syllables_needed))
-                poem_lines.append(poem_line)
-
-            return poem_lines
-
+        # TODO(keikakub): improve this algorithm, this method kind of sucks
+        #   (Markov Chains would be a good start to generating poetry that makes more sense)
         unique_words = list(set(self.ds[Text._element_types[1]]))
-
         poems = []
+        # Generate poems.
         for _ in range(0, int(number_to_generate)):
-            poems.append(generate_poem())
-
+            # Generate a poem.
+            poem_lines = []
+            fail_count = 0
+            for syllables_needed in syllables_per_line:
+                # Generate a poem line.
+                poem_line = ""
+                random_words = []
+                while True:
+                    random_words.append(random.choice(unique_words))
+                    syllable_count = sum([word.countSyllables() for word in random_words])
+                    if syllable_count == syllables_needed :
+                        # The words have the right number of syllables, let's combine them and return.
+                        break
+                    elif syllable_count > syllables_needed:
+                        fail_count += 1
+                        if fail_count > MAX_POEM_LINE_ITERATIONS:
+                            # We're at the fail-safe limit, let's return with the words we have anyway.
+                            break
+                        # The words have too many syllables, let's try again.
+                        random_words = []
+                poem_line = " ".join([str(word) for word in random_words])
+                poem_line = poem_line.lower().capitalize()
+                poem_lines.append(poem_line)
+            poems.append(poem_lines)
         return poems
 
     def calculate_Gunning_Fog_Index(self):
