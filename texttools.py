@@ -95,10 +95,7 @@ class Word(BasicText):
 
     def isAdverb(self):
         """Determines whether word is an adverb."""
-        if re.match(r"\w+ly", self.text):
-            return True
-        else:
-            return False
+        return re.match(r"\w+ly", self.text)
 
 class Text(BasicText):
     """Represents a human language text."""
