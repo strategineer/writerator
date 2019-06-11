@@ -11,9 +11,9 @@ poet is a command line tool that analyzes plain text files containing english la
 
 `poet book.txt count -t c`: counts the number of occurrences of each character in _book.txt_ and displays them in descending order of count.
 
-`poet book.txt count -e the`: counts the number of occurrences of each the word "the" in _book.txt_ and displays the total count.
+`poet book.txt count -e the`: counts the number of occurrences of the word "the" in _book.txt_ and displays the total count.
 
-`poet book.txt match e`: counts the number of occurrences of character "e" in each word in _book.txt_ and displays them in descending order of count.
+`poet book.txt match e`: counts the number of occurrences of the character "e" in each word in _book.txt_ and displays them in descending order of count.
 
 
 ## Installing poet
