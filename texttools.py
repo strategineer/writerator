@@ -95,14 +95,14 @@ class Word(BasicText):
     def text(self, new_text):
         self._text = new_text.strip(""" (),.?!;:\"\'""")
 
-    def countSyllables(self):
+    def count_syllables(self):
         """ Counts the number of syllables for an English language Word.  """
         n_syllables = len(Word.h_en.syllables(self.text))
         if n_syllables != 0:
             return n_syllables
         return 1
 
-    def isAdverb(self):
+    def is_adverb(self):
         """Determines whether word is an adverb."""
         return re.match(r"\w+ly", self.text)
 
@@ -224,7 +224,7 @@ class Text(BasicText):
                 else:
                     next_word = self.first_word_picker.get()
                 random_words.append(next_word)
-                n_syllables += next_word.countSyllables()
+                n_syllables += next_word.count_syllables()
                 if abs(n_syllables -
                        syllables_needed) <= MAX_FUZZ_FOR_SYLLABLES and str(
                            next_word) not in FORBIDDEN_LAST_WORDS:
@@ -246,7 +246,7 @@ class Text(BasicText):
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
         words = self.ds[Text._element_types[1]]
-        complex_words = [word for word in words if word.countSyllables() >= 3]
+        complex_words = [word for word in words if word.count_syllables() >= 3]
 
         number_of_words = len(words)
         number_of_complex_words = len(complex_words)
@@ -255,18 +255,18 @@ class Text(BasicText):
         return (0.4) * ((number_of_words / number_of_sentences) + 100 *
                         (number_of_complex_words / number_of_words))
 
-    def _make_occurences_Counter(self, element_type):
+    def _make_occurrences_Counter(self, element_type):
         """Returns a Counter with the elements decided by kind, either
          words, characters or sentences as keys from within a Text."""
         elements = self.ds[element_type]
         return Counter([str(x) for x in elements])
 
-    def count_occurences(self, element_to_count, element_type):
+    def count_occurrences(self, element_to_count, element_type):
         """Return the total number of times an element appears in a Text."""
-        occurences = self._make_occurences_Counter(element_type)
+        occurrences = self._make_occurrences_Counter(element_type)
 
-        if element_to_count in occurences:
-            return occurences[element_to_count]
+        if element_to_count in occurrences:
+            return occurrences[element_to_count]
         else:
             return 0
 
@@ -295,11 +295,11 @@ class Text(BasicText):
             element found in the Text and
             the str form of the elements.
 
-            The list is sorted by number of occurences in decreasing order.
+            The list is sorted by number of occurrences in decreasing order.
         """
         assert element_type in Text._element_types, f"No such type available cannot rank by occurrences: {element_type}"
-        occurences = self._make_occurences_Counter(element_type)
-        return occurences.most_common()
+        occurrences = self._make_occurrences_Counter(element_type)
+        return occurrences.most_common()
 
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""
@@ -307,7 +307,7 @@ class Text(BasicText):
         adverbs = []
 
         for word in words:
-            if word.isAdverb():
+            if word.is_adverb():
                 adverbs.append(word)
 
         return adverbs

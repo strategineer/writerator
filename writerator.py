@@ -134,7 +134,7 @@ def info(ctx):
 def count(ctx, element, element_type):
     text = ctx.obj[ARG_TEXT]
     if element:
-        print(str(text.count_occurences(element, element_type)))
+        print(str(text.count_occurrences(element, element_type)))
     else:
         ranked_elements = text.rank_by_total_count(element_type)
         print_ranked_list_output(ranked_elements)
@@ -142,7 +142,9 @@ def count(ctx, element, element_type):
 
 @cli.command(
     help=
-    """count the number of matches of a pattern (sequences of characters seperated by '~') within each one of the elements of the text"""
+    """Count the number of matches of a pattern (sequences of characters separated by '~') within each one of the elements of the text.
+    eg. You can count the occurrences of the letter 'e' in each word in the text and all words with at least one occurrence ordered by number of occurrences.
+    """
 )
 @click.argument("patterns")
 @click.option(
@@ -157,9 +159,9 @@ def count(ctx, element, element_type):
 @click.pass_context
 def match(ctx, patterns, element_type):
     text = ctx.obj[ARG_TEXT]
-    match_seperator = "~"
-    if match_seperator in patterns:
-        patterns = patterns.split(match_seperator)
+    match_separator = "~"
+    if match_separator in patterns:
+        patterns = patterns.split(match_separator)
     else:
         patterns = [patterns]
     ranked_elements = text.rank_by_number_of_matches(patterns, element_type)
