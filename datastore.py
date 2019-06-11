@@ -8,6 +8,7 @@ from contextlib import closing
 import os
 import tempfile
 
+
 class DataStore(object):
     """Represents a persistent data storage framework."""
 
@@ -20,13 +21,16 @@ class DataStore(object):
     @staticmethod
     def _load_computed_data(source_filename, key_value_tuples=[]):
         """Loads the data into the database."""
+
         def set_file_last_modified_time(database, source_filename):
             """Sets filename's last modified within the db"""
             t_now = os.path.getmtime(source_filename)
             file_time_modified = datetime.datetime.fromtimestamp(t_now)
             database['file_time_modified'] = file_time_modified
 
-        with closing(shelve.open(DataStore._get_data_source_filename(source_filename))) as database:
+        with closing(
+                shelve.open(DataStore._get_data_source_filename(
+                    source_filename))) as database:
             for (key, value) in key_value_tuples:
                 database[key] = value
             set_file_last_modified_time(database, source_filename)
@@ -46,8 +50,11 @@ class DataStore(object):
 
     def __getitem__(self, key):
         """Get value associated to a key in the database"""
-        with closing(shelve.open(DataStore._get_data_source_filename(self.filename))) as self.db:
-            assert key in self.db.keys(), f"Key '{key}' not contained within txt database"
+        with closing(
+                shelve.open(DataStore._get_data_source_filename(
+                    self.filename))) as self.db:
+            assert key in self.db.keys(
+            ), f"Key '{key}' not contained within txt database"
             value = self.db[key]
             return value
 
@@ -61,13 +68,16 @@ class DataStore(object):
             with closing(shelve.open(data_filepath)) as database:
                 input_file_time = os.path.getmtime(source_filename)
 
-                file_date_modified = datetime.datetime.fromtimestamp(input_file_time)
+                file_date_modified = datetime.datetime.fromtimestamp(
+                    input_file_time)
                 data_date_modified = database["file_time_modified"]
 
                 return str(data_date_modified) != str(file_date_modified)
 
+
 def main():
     pass
 
-if __name__== "__main__":
+
+if __name__ == "__main__":
     main()

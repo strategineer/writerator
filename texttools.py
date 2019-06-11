@@ -17,7 +17,9 @@ from prob import ProbabilityCounter
 
 MAX_POEM_LINE_ITERATIONS = 100
 MAX_FUZZ_FOR_SYLLABLES = 0
-FORBIDDEN_LAST_WORDS = set(["and", "the", "to", "of", "for", "a", "into", "from"])
+FORBIDDEN_LAST_WORDS = set(
+    ["and", "the", "to", "of", "for", "a", "into", "from"])
+
 
 @total_ordering
 class BasicText(object):
@@ -66,6 +68,7 @@ class BasicText(object):
     def __repr__(self):
         return self.__str__()
 
+
 class Sentence(BasicText):
     """Represents a Sentence."""
 
@@ -76,6 +79,7 @@ class Sentence(BasicText):
     @BasicText.text.setter
     def text(self, new_text):
         self._text = new_text.strip(" .") + "."
+
 
 class Word(BasicText):
     """Represents a Word."""
@@ -101,6 +105,7 @@ class Word(BasicText):
     def isAdverb(self):
         """Determines whether word is an adverb."""
         return re.match(r"\w+ly", self.text)
+
 
 class Text(BasicText):
     """Represents a human language text."""
@@ -156,6 +161,7 @@ class Text(BasicText):
             Splits a text into a list elements depending on the given
             element_type.
         """
+
         def _parse_sentences(text):
             """Parses a Text and returns a list containing the sentences as Sentences"""
             sentences = text.split('.')
@@ -206,14 +212,22 @@ class Text(BasicText):
             while True:
                 if next_word:
                     if next_word not in self.markov_chain_word_pickers:
-                        adjacent_words = [words[i+1] for i, e in enumerate(words) if e == next_word and i < n_words]
-                        self.markov_chain_word_pickers[next_word] = ProbabilityCounter(Counter(adjacent_words))
+                        adjacent_words = [
+                            words[i + 1]
+                            for i, e in enumerate(words)
+                            if e == next_word and i < n_words
+                        ]
+                        self.markov_chain_word_pickers[
+                            next_word] = ProbabilityCounter(
+                                Counter(adjacent_words))
                     next_word = self.markov_chain_word_pickers[next_word].get()
                 else:
                     next_word = self.first_word_picker.get()
                 random_words.append(next_word)
                 n_syllables += next_word.countSyllables()
-                if abs(n_syllables - syllables_needed) <= MAX_FUZZ_FOR_SYLLABLES and str(next_word) not in FORBIDDEN_LAST_WORDS:
+                if abs(n_syllables -
+                       syllables_needed) <= MAX_FUZZ_FOR_SYLLABLES and str(
+                           next_word) not in FORBIDDEN_LAST_WORDS:
                     # The words have the right number of syllables, let's combine them and return.
                     break
                 elif n_syllables > syllables_needed:
@@ -224,7 +238,7 @@ class Text(BasicText):
                     # The words have too many syllables, let's try again.
                     random_words = []
                     next_word = None
-                    n_syllables  = 0
+                    n_syllables = 0
 
             poem_line = " ".join([str(word) for word in random_words])
             print(poem_line.lower().capitalize())
@@ -238,14 +252,14 @@ class Text(BasicText):
         number_of_complex_words = len(complex_words)
         number_of_sentences = len(self.ds[Text._element_types[2]])
 
-        return (0.4) * ( (number_of_words / number_of_sentences)
-                         + 100 * (number_of_complex_words / number_of_words) )
+        return (0.4) * ((number_of_words / number_of_sentences) + 100 *
+                        (number_of_complex_words / number_of_words))
 
     def _make_occurences_Counter(self, element_type):
         """Returns a Counter with the elements decided by kind, either
          words, characters or sentences as keys from within a Text."""
         elements = self.ds[element_type]
-        return Counter( [str(x) for x in elements] )
+        return Counter([str(x) for x in elements])
 
     def count_occurences(self, element_to_count, element_type):
         """Return the total number of times an element appears in a Text."""
@@ -271,7 +285,7 @@ class Text(BasicText):
             current_element_count = 0
             for match in matches_to_check:
                 current_element_count += element.count(match)
-            ranked_by_matches.append( (element, current_element_count ) )
+            ranked_by_matches.append((element, current_element_count))
         ranked_by_matches.sort(reverse=True, key=lambda x: x[1])
         return ranked_by_matches
 

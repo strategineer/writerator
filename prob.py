@@ -2,7 +2,9 @@ import random
 import collections
 from operator import itemgetter
 
+
 class ProbabilityCounter():
+
     def __init__(self, counter):
         self._counter = counter
         self._probabilities = []
@@ -11,7 +13,9 @@ class ProbabilityCounter():
         for (key, n_key) in counter.items():
             self._probabilities.append((key, n_key / total_count))
 
-        self._probabilities = sorted(self._probabilities, key=itemgetter(1), reverse=True)
+        self._probabilities = sorted(self._probabilities,
+                                     key=itemgetter(1),
+                                     reverse=True)
 
         sum_probability = 0
         for i in range(len(self._probabilities)):

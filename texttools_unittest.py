@@ -4,6 +4,7 @@ import unittest
 
 from texttools import Sentence, Word
 
+
 class TestTextTools(unittest.TestCase):
 
     def setUp(self):
@@ -16,7 +17,7 @@ class TestTextTools(unittest.TestCase):
 
     def test_init(self):
         """"Tests init correcting .text params"""
-        self.word =  Word("Bill .,")
+        self.word = Word("Bill .,")
         self.sentence = Sentence(" Bill is cool. ")
 
         self.assertEqual(self.word.text, "Bill")
@@ -66,6 +67,7 @@ class TestTextTools(unittest.TestCase):
 
         self.assertEqual(self.sentence, sentence2)
         self.assertEqual(self.sentence.text, sentence2.text)
+
 
 if __name__ == '__main__':
     unittest.main()
