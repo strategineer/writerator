@@ -24,12 +24,10 @@ def get_repeat_syllable_pattern(number_of_syllables, times_to_repeat):
         repeat_pattern.append(number_of_syllables)
     return repeat_pattern
 
-def generate_ranked_list_output(ranked_elements):
-    output_lines = []
+def print_ranked_list_output(ranked_elements):
     for (element, count) in ranked_elements:
         if count != 0:
-            output_lines.append(str(count) + ": " + str(element))
-    return output_lines
+            print(str(count) + ": " + str(element))
 
 class ElementParamType(click.ParamType):
     name = "element"
@@ -77,8 +75,7 @@ def poem(ctx, syllables, preset, shortcut):
         # Default to a Haiku.
         syllables_pattern = get_syllable_pattern('h')
 
-    for l in text.generate_poem(syllables_pattern):
-        print(l)
+    text.generate_poem(syllables_pattern)
 
 @cli.command(help="""get general info about the text (just the Gunning-Fog Index for now)""")
 @click.pass_context
@@ -93,15 +90,11 @@ def info(ctx):
 @click.pass_context
 def count(ctx, count, element_type):
     text = ctx.obj[ARG_TEXT]
-    ls = []
     if count:
-        ls = [str(text.count_occurences(count, element_type))]
+        map(lambda x: print(x), [str(text.count_occurences(count, element_type))])
     else:
         ranked_elements = text.rank_by_total_count(element_type)
-        ls = generate_ranked_list_output(ranked_elements)
-
-    for l in ls:
-        print(l)
+        print_ranked_list_output(ranked_elements)
 
 @cli.command(help="""count the number of matches of a pattern (sequences of characters seperated by '~') within each one of the elements of the text""")
 @click.argument("patterns")
@@ -115,6 +108,5 @@ def match(ctx, patterns, element_type):
         patterns = patterns.split(match_seperator)
     else:
         patterns = [patterns]
-    ranked_elements = text.rank_by_number_of_matches(patterns , element_type)
-    for l in generate_ranked_list_output(ranked_elements):
-        print(l)
+    ranked_elements = text.rank_by_number_of_matches(patterns, element_type)
+    print_ranked_list_output(ranked_elements)

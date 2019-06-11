@@ -13,8 +13,11 @@ from collections import Counter
 from hyphen import Hyphenator
 
 from datastore import DataStore
+from prob import ProbabilityCounter
 
-MAX_POEM_LINE_ITERATIONS = 10000
+MAX_POEM_LINE_ITERATIONS = 100
+MAX_FUZZ_FOR_SYLLABLES = 0
+FORBIDDEN_LAST_WORDS = set(["and", "the", "to", "of", "for", "a", "into", "from"])
 
 @total_ordering
 class BasicText(object):
@@ -109,6 +112,8 @@ class Text(BasicText):
         assert filename
         self.filename = filename
         self.text = self.get_text_from_txt_file()
+        self.first_word_picker = None
+        self.markov_chain_word_pickers = None
 
         ds_keys_values = []
         if DataStore.is_to_be_computed(filename):
@@ -189,7 +194,13 @@ class Text(BasicText):
         """Generate poems using the words contained within the Text"""
         # TODO(keikakub): improve this algorithm, this method kind of sucks
         #   (Markov Chains would be a good start to generating poetry that makes more sense)
-        unique_words = list(set(self.ds[Text._element_types[1]]))
+        words = self.ds[Text._element_types[1]]
+        n_words = len(words) - 1
+        if not self.first_word_picker:
+            self.first_word_picker = ProbabilityCounter(Counter(words))
+        unique_words = list(set(words))
+        if not self.markov_chain_word_pickers:
+            self.markov_chain_word_pickers = {}
         # Generate a poem.
         poem_lines = []
         fail_count = 0
@@ -197,23 +208,33 @@ class Text(BasicText):
             # Generate a poem line.
             poem_line = ""
             random_words = []
+            n_syllables = 0
+            next_word = None
             while True:
-                random_words.append(random.choice(unique_words))
-                syllable_count = sum([word.countSyllables() for word in random_words])
-                if syllable_count == syllables_needed :
+                if next_word:
+                    if next_word not in self.markov_chain_word_pickers:
+                        adjacent_words = [words[i+1] for i, e in enumerate(words) if e == next_word and i < n_words]
+                        self.markov_chain_word_pickers[next_word] = ProbabilityCounter(Counter(adjacent_words))
+                    next_word = self.markov_chain_word_pickers[next_word].get()
+                else:
+                    next_word = self.first_word_picker.get()
+                random_words.append(next_word)
+                n_syllables += next_word.countSyllables()
+                if abs(n_syllables - syllables_needed) <= MAX_FUZZ_FOR_SYLLABLES and str(next_word) not in FORBIDDEN_LAST_WORDS:
                     # The words have the right number of syllables, let's combine them and return.
                     break
-                elif syllable_count > syllables_needed:
+                elif n_syllables > syllables_needed:
                     fail_count += 1
                     if fail_count > MAX_POEM_LINE_ITERATIONS:
                         # We're at the fail-safe limit, let's return with the words we have anyway.
                         break
                     # The words have too many syllables, let's try again.
                     random_words = []
+                    next_word = None
+                    n_syllables  = 0
+
             poem_line = " ".join([str(word) for word in random_words])
-            poem_line = poem_line.lower().capitalize()
-            poem_lines.append(poem_line)
-        return poem_lines
+            print(poem_line.lower().capitalize())
 
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
