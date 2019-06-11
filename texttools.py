@@ -110,12 +110,12 @@ class Text(BasicText):
         self.filename = filename
         self.text = self.get_text_from_txt_file()
 
+        ds_keys_values = []
         if DataStore.is_to_be_computed(filename):
-            database = DataStore(filename, self.__compute_ds_keys_values())
+            logging.debug(f"{filename}'s cache needs to be recomputed")
+            ds_keys_values = self.__compute_ds_keys_values()
 
-        else:
-            database = DataStore(filename)
-
+        database = DataStore(filename, ds_keys_values)
         self.ds = database
 
     def get_text_from_txt_file(self):

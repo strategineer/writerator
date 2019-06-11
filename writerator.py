@@ -48,7 +48,7 @@ class ElementParamType(click.ParamType):
 ELEMENT_TYPE = ElementParamType()
 
 @click.group()
-@click.argument('IN_FILE')
+@click.argument('IN_FILE', type=click.Path(exists=True))
 @click.option('-v', '--verbose', is_flag=True, help="Enable verbose logging.")
 @click.pass_context
 def cli(ctx, in_file, verbose):

@@ -6,6 +6,7 @@ import datetime
 import shelve
 from contextlib import closing
 import os
+import tempfile
 
 class DataStore(object):
     """Represents a persistent data storage framework."""
@@ -17,39 +18,35 @@ class DataStore(object):
         self.db = DataStore._load_computed_data(filename, key_value_pairs)
 
     @staticmethod
-    def _load_computed_data(filename, key_value_tuples=[]):
+    def _load_computed_data(source_filename, key_value_tuples=[]):
         """Loads the data into the database."""
-        def set_file_last_modified_time(database, filename):
+        def set_file_last_modified_time(database, source_filename):
             """Sets filename's last modified within the db"""
-            t_now = os.path.getmtime(filename)
+            t_now = os.path.getmtime(source_filename)
             file_time_modified = datetime.datetime.fromtimestamp(t_now)
             database['file_time_modified'] = file_time_modified
 
-        with closing(shelve.open(DataStore.__get_data_filename(filename))) as database:
+        with closing(shelve.open(DataStore._get_data_source_filename(source_filename))) as database:
             for (key, value) in key_value_tuples:
                 database[key] = value
-            set_file_last_modified_time(database, filename)
+            set_file_last_modified_time(database, source_filename)
 
         return database
 
     @staticmethod
-    def __get_data_filename(filename):
+    def _get_data_source_filename(source_filename):
         """
-            Returns the db's filename without the .dat
+            Returns the db's filename
 
             SIDE EFFECT: builds directories for the files if they don't
              exist.
         """
-        (name, extension) = os.path.basename(filename).split(".")
-        directory = "data" + os.sep + name
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        data_filename = directory + os.sep + name
-        return data_filename
+        name = os.path.abspath(source_filename).replace(os.sep, "_")
+        return tempfile.gettempdir() + os.sep + "poetcache" + name
 
     def __getitem__(self, key):
         """Get value associated to a key in the database"""
-        with closing(shelve.open(DataStore.__get_data_filename(self.filename))) as self.db:
+        with closing(shelve.open(DataStore._get_data_source_filename(self.filename))) as self.db:
             if key in self.db.keys():
                 value = self.db[key]
                 return value
@@ -58,15 +55,14 @@ class DataStore(object):
                 sys.exit(1)
 
     @staticmethod
-    def is_to_be_computed(filename):
+    def is_to_be_computed(source_filename):
         """Checks if Datastore's db should be recomputed."""
-        if not os.path.isfile(DataStore.__get_data_filename(filename) + ".dat"):
+        data_filepath = DataStore._get_data_source_filename(source_filename)
+        if not os.path.isfile(data_filepath):
             return True
-
-
         else:
-            with closing(shelve.open(DataStore.__get_data_filename(filename))) as database:
-                input_file_time = os.path.getmtime(filename)
+            with closing(shelve.open(data_filepath)) as database:
+                input_file_time = os.path.getmtime(source_filename)
 
                 file_date_modified = datetime.datetime.fromtimestamp(input_file_time)
                 data_date_modified = database["file_time_modified"]
