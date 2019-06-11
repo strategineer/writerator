@@ -5,19 +5,16 @@ import sys
 import os
 import shlex
 import argparse
-import configparser
 
 from texttools import Text
 
 def main():
-    settings_config = configparser.ConfigParser()
-    settings_config.read('config' + os.sep + 'settings.ini')
-
-    parser = make_parser(settings_config)
+    parser = make_parser()
 
     args = parser.parse_args()
 
-    set_logging_level(args.debug)
+    logging_level = logging.DEBUG if args.debug else logging.ERROR
+    logging.basicConfig(stream=sys.stderr, level=logging_level)
 
     logging.debug(str(args))
 
@@ -31,19 +28,15 @@ def main():
 
     text = Text(inFilename)
 
-    output_lines = get_output(text, parser)
+    for line in get_output(text, parser):
+        print(line)
 
-    with args.outfile as file:
-        file.writelines([line + "\n" for line in output_lines])
-
-def make_parser(config):
+def make_parser():
     main_parser = argparse.ArgumentParser()
 
 
     main_parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                         default=sys.stdin)
-    main_parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
-                        default=sys.stdout)
 
     main_parser.add_argument("-d", "--debug",
                         help="displays logging debug messages.",
@@ -52,7 +45,7 @@ def make_parser(config):
     type_parent_parser = argparse.ArgumentParser(add_help=False)
 
     type_parent_parser.add_argument("-t", "--type", choices=['w', 'c', 's'],
-                                    default=config['parser']['TypeOfElement'], type=str,
+                                    default='w', type=str,
                                     help="""determine the type of text elements
                                     (words, characters, sentences) to analyze""" )
 
@@ -110,13 +103,6 @@ def make_parser(config):
 
     return main_parser
 
-def set_logging_level(bool_option):
-    if bool_option:
-        logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-
-    else:
-        logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
-
 def get_output(text, parser):
     def expand_type(code):
         """Expands one letter element type code to full word"""
@@ -167,7 +153,6 @@ def get_output(text, parser):
             elements_to_match = elements_to_match.split(match_seperator)
         else:
             elements_to_match = [elements_to_match]
-        print(element_type)
         ranked_elements = text.rank_by_number_of_matches( elements_to_match , element_type )
         return generate_ranked_list_output(ranked_elements)
 
