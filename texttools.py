@@ -17,8 +17,9 @@ from prob import ProbabilityCounter
 
 MAX_POEM_LINE_ITERATIONS = 100
 MAX_FUZZ_FOR_SYLLABLES = 0
+# TODO(keikakub): figure out a better way of improving the end of lines than banning weird words
 FORBIDDEN_LAST_WORDS = set(
-    ["and", "the", "to", "of", "for", "a", "into", "from"])
+    ["and", "the", "to", "of", "for", "a", "into", "from", "that", "was", "each", "on", "in", "your", "then", "were", "their"])
 
 
 @total_ordering
