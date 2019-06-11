@@ -21,3 +21,5 @@ Download the source code and run `pip install .` from within the folder containi
 
 ## TODO
 - Add code/options for rhyming
+- Add option for enabling/disabling the cache (datastore.py)
+    - Implement a feature to allow piping text input into the CLI instead of using a required parameter (caching must not be used if stdin is the input)
