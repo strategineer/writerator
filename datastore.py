@@ -47,12 +47,9 @@ class DataStore(object):
     def __getitem__(self, key):
         """Get value associated to a key in the database"""
         with closing(shelve.open(DataStore._get_data_source_filename(self.filename))) as self.db:
-            if key in self.db.keys():
-                value = self.db[key]
-                return value
-            else:
-                logging.error("Key not contained within txt database: " + key )
-                sys.exit(1)
+            assert key in self.db.keys(), f"Key '{key}' not contained within txt database"
+            value = self.db[key]
+            return value
 
     @staticmethod
     def is_to_be_computed(source_filename):

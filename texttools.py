@@ -125,17 +125,10 @@ class Text(BasicText):
 
     def get_text_from_txt_file(self):
         """Rips the text from a plain text file and returns it as a str."""
-        if os.path.isfile(self.filename):
-            with io.open(self.filename, 'r') as file:
-                lines = file.readlines()
-
-            lines = [x.strip() for x in lines]
-
-            return " ".join(lines)
-
-        else:
-            logging.error("No such filename cannot get text: " + self.filename)
-            sys.exit(1)
+        with open(self.filename, 'r') as file:
+            lines = file.readlines()
+        lines = [x.strip() for x in lines]
+        return " ".join(lines)
 
     def __compute_ds_keys_values(self):
         """
@@ -271,28 +264,16 @@ class Text(BasicText):
             The list is sorted by number of matches in decreasing order.
         """
         assert isinstance(matches_to_check, list)
-
-        if element_type in Text._element_types:
-            set_of_elements = set(self.ds[element_type])
-
-            ranked_by_matches = []
-
-            for element in set_of_elements:
-
-                current_element_count = 0
-                for match in matches_to_check:
-                    current_element_count += element.count(match)
-
-                ranked_by_matches.append( (element, current_element_count ) )
-
-            ranked_by_matches.sort(reverse=True, key=lambda x: x[1])
-
-            return ranked_by_matches
-
-        else:
-            logging.error("No such type available cannot rank by matches: " + element_type)
-            logging.error("try: " + str(Text._element_types))
-            sys.exit(1)
+        assert element_type in Text._element_types, f"No such type available cannot rank by matches: {element_type}"
+        set_of_elements = set(self.ds[element_type])
+        ranked_by_matches = []
+        for element in set_of_elements:
+            current_element_count = 0
+            for match in matches_to_check:
+                current_element_count += element.count(match)
+            ranked_by_matches.append( (element, current_element_count ) )
+        ranked_by_matches.sort(reverse=True, key=lambda x: x[1])
+        return ranked_by_matches
 
     def rank_by_total_count(self, element_type):
         """
@@ -302,16 +283,9 @@ class Text(BasicText):
 
             The list is sorted by number of occurences in decreasing order.
         """
-        if element_type in Text._element_types:
-            occurences = self._make_occurences_Counter(element_type)
-
-            return occurences.most_common()
-
-        else:
-            logging.error("No such type available cannot rank by occurrences: "
-                          + element_type)
-            logging.error("try: " + str(Text._element_types))
-            sys.exit(1)
+        assert element_type in Text._element_types, f"No such type available cannot rank by occurrences: {element_type}"
+        occurences = self._make_occurences_Counter(element_type)
+        return occurences.most_common()
 
     def find_all_adverbs(self):
         """Finds all the adverbs in the text."""

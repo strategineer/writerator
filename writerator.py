@@ -84,14 +84,14 @@ def info(ctx):
     print(str(text.calculate_Gunning_Fog_Index()))
 
 @cli.command(help="""Count each occurrence, as defined by the -t option, of each element within the text.""")
-@click.option("-c", "--count", help="""Count the number of times a specific element appears in the text.""")
+@click.option("-e", "--element", help="""Count the number of times a specific element appears in the text.""")
 @click.option("-t", "--type", "element_type", type=ELEMENT_TYPE, default='w',
               help="""determine the type of text elements (words, characters, sentences) to analyze""" )
 @click.pass_context
-def count(ctx, count, element_type):
+def count(ctx, element, element_type):
     text = ctx.obj[ARG_TEXT]
-    if count:
-        map(lambda x: print(x), [str(text.count_occurences(count, element_type))])
+    if element:
+        print(str(text.count_occurences(element, element_type)))
     else:
         ranked_elements = text.rank_by_total_count(element_type)
         print_ranked_list_output(ranked_elements)
