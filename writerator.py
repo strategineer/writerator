@@ -18,15 +18,7 @@ def main():
 
     logging.debug(str(args))
 
-    if(args.infile.name == "<stdin>" ):
-        inFilename=settings_config['folders']['InputFolder'] + os.sep + 'stdin.txt'
-        with args.infile as f, open(inFilename, 'w') as w:
-            for line in f:
-                w.write(line);
-    else:
-        inFilename=args.infile.name
-
-    text = Text(inFilename)
+    text = Text(args.infile.name)
 
     for line in get_output(text, parser):
         print(line)
