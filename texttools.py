@@ -185,39 +185,35 @@ class Text(BasicText):
         elif element_type == Text._element_types[2]:
             return _parse_sentences(self.text)
 
-    def generate_poems(self, syllables_per_line, number_to_generate):
+    def generate_poem(self, syllables_per_line):
         """Generate poems using the words contained within the Text"""
         # TODO(keikakub): improve this algorithm, this method kind of sucks
         #   (Markov Chains would be a good start to generating poetry that makes more sense)
         unique_words = list(set(self.ds[Text._element_types[1]]))
-        poems = []
-        # Generate poems.
-        for _ in range(0, int(number_to_generate)):
-            # Generate a poem.
-            poem_lines = []
-            fail_count = 0
-            for syllables_needed in syllables_per_line:
-                # Generate a poem line.
-                poem_line = ""
-                random_words = []
-                while True:
-                    random_words.append(random.choice(unique_words))
-                    syllable_count = sum([word.countSyllables() for word in random_words])
-                    if syllable_count == syllables_needed :
-                        # The words have the right number of syllables, let's combine them and return.
+        # Generate a poem.
+        poem_lines = []
+        fail_count = 0
+        for syllables_needed in syllables_per_line:
+            # Generate a poem line.
+            poem_line = ""
+            random_words = []
+            while True:
+                random_words.append(random.choice(unique_words))
+                syllable_count = sum([word.countSyllables() for word in random_words])
+                if syllable_count == syllables_needed :
+                    # The words have the right number of syllables, let's combine them and return.
+                    break
+                elif syllable_count > syllables_needed:
+                    fail_count += 1
+                    if fail_count > MAX_POEM_LINE_ITERATIONS:
+                        # We're at the fail-safe limit, let's return with the words we have anyway.
                         break
-                    elif syllable_count > syllables_needed:
-                        fail_count += 1
-                        if fail_count > MAX_POEM_LINE_ITERATIONS:
-                            # We're at the fail-safe limit, let's return with the words we have anyway.
-                            break
-                        # The words have too many syllables, let's try again.
-                        random_words = []
-                poem_line = " ".join([str(word) for word in random_words])
-                poem_line = poem_line.lower().capitalize()
-                poem_lines.append(poem_line)
-            poems.append(poem_lines)
-        return poems
+                    # The words have too many syllables, let's try again.
+                    random_words = []
+            poem_line = " ".join([str(word) for word in random_words])
+            poem_line = poem_line.lower().capitalize()
+            poem_lines.append(poem_line)
+        return poem_lines
 
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""

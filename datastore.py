@@ -23,13 +23,11 @@ class DataStore(object):
             """Sets filename's last modified within the db"""
             t_now = os.path.getmtime(filename)
             file_time_modified = datetime.datetime.fromtimestamp(t_now)
-
             database['file_time_modified'] = file_time_modified
 
         with closing(shelve.open(DataStore.__get_data_filename(filename))) as database:
             for (key, value) in key_value_tuples:
                 database[key] = value
-
             set_file_last_modified_time(database, filename)
 
         return database
@@ -40,7 +38,7 @@ class DataStore(object):
             Returns the db's filename without the .dat
 
             SIDE EFFECT: builds directories for the files if they don't
-             exist as well
+             exist.
         """
         (name, extension) = os.path.basename(filename).split(".")
         directory = "data" + os.sep + name
