@@ -112,11 +112,15 @@ class Text(BasicText):
 
     _element_types = ['characters', 'words', 'sentences']
 
-    def __init__(self, filename):
+    def __init__(self, file):
         """Initializes a Text."""
-        assert filename
-        self.filename = filename
-        self.text = self.get_text_from_txt_file()
+        # Rips the text from a plain text file and returns it as a str.
+        f = open(file, 'r') if file else sys.stdin
+        lines = f.readlines()
+        lines = [x.strip() for x in lines]
+        self.text = " ".join(lines)
+        if f is not sys.stdin:
+            f.close()
         self.first_word_picker = None
         self.markov_chain_word_pickers = None
 
@@ -164,13 +168,6 @@ class Text(BasicText):
             return self.sentences
         logger.error("Fatal error: element_type not found")
         sys.exit(1)
-
-    def get_text_from_txt_file(self):
-        """Rips the text from a plain text file and returns it as a str."""
-        with open(self.filename, 'r') as file:
-            lines = file.readlines()
-        lines = [x.strip() for x in lines]
-        return " ".join(lines)
 
     def _split_by_element_type(self, element_type):
         """

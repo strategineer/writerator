@@ -54,17 +54,17 @@ ELEMENT_TYPE = ElementParamType()
 
 
 @click.group()
-@click.argument('IN_FILE', type=click.Path(exists=True))
+@click.option('-f', '--file', type=click.Path(exists=True))
 @click.option('-v', '--verbose', is_flag=True, help="Enable verbose logging.")
 @click.pass_context
-def cli(ctx, in_file, verbose):
+def cli(ctx, file, verbose):
     if ctx.obj is None:
         ctx.obj = {}
 
     logging_level = logging.DEBUG if verbose else logging.ERROR
     logging.basicConfig(stream=sys.stderr, level=logging_level)
 
-    ctx.obj[ARG_TEXT] = Text(in_file)
+    ctx.obj[ARG_TEXT] = Text(file)
 
 
 @cli.command(help='Generate randomized poems.')
