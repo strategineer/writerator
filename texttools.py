@@ -260,7 +260,7 @@ class Text(BasicText):
         """Returns a Counter with the elements decided by kind, either
          words, characters or sentences as keys from within a Text."""
         assert element_type in Text._element_types, f"No such type available cannot rank by occurrences: {element_type}"
-        elements = get_elements(element_type)
+        elements = self.get_elements(element_type)
         return Counter([str(x) for x in elements])
 
     def count_occurrences(self, element_to_count, element_type):
@@ -281,7 +281,7 @@ class Text(BasicText):
         """
         assert isinstance(matches_to_check, list)
         assert element_type in Text._element_types, f"No such type available cannot rank by matches: {element_type}"
-        set_of_elements = set(get_elements(element_type))
+        set_of_elements = set(self.get_elements(element_type))
         ranked_by_matches = []
         for element in set_of_elements:
             current_element_count = 0
