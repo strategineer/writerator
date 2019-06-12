@@ -12,7 +12,6 @@ from collections import Counter
 
 from hyphen import Hyphenator
 
-from datastore import DataStore
 from prob import ProbabilityCounter
 
 MAX_POEM_LINE_ITERATIONS = 100
@@ -121,13 +120,50 @@ class Text(BasicText):
         self.first_word_picker = None
         self.markov_chain_word_pickers = None
 
-        ds_keys_values = []
-        if DataStore.is_to_be_computed(filename):
-            logging.debug(f"{filename}'s cache needs to be recomputed")
-            ds_keys_values = self.__compute_ds_keys_values()
+        self._words = None
+        self._sentences = None
+        self._characters = None
 
-        database = DataStore(filename, ds_keys_values)
-        self.ds = database
+    @property
+    def characters(self):
+        if not self._characters:
+            self._characters = self._split_by_element_type(Text._element_types[0])
+        return self._characters
+
+    @characters.setter
+    def characters(self, characters):
+        self._characters = characters
+
+    @property
+    def words(self):
+        if not self._words:
+            self._words = self._split_by_element_type(Text._element_types[1])
+        return self._words
+
+    @words.setter
+    def words(self, words):
+        self._words = words
+
+    @property
+    def sentences(self):
+        if not self._sentences:
+            self._sentences = self._split_by_element_type(Text._element_types[2])
+        return self._sentences
+
+    @sentences.setter
+    def sentences(self, sentences):
+        self._sentences = sentences
+
+    def get_elements(self, element_type):
+        assert element_type in Text._element_types, f"No such type available cannot rank by matches: {element_type}"
+        if element_type == Text._element_types[0]:
+            return self.characters
+        elif element_type == Text._element_types[1]:
+            return self.words
+        elif element_type == Text._element_types[2]:
+            return self.sentences
+        logger.error("Fatal error: element_type not found")
+        sys.exit(1)
 
     def get_text_from_txt_file(self):
         """Rips the text from a plain text file and returns it as a str."""
@@ -136,69 +172,34 @@ class Text(BasicText):
         lines = [x.strip() for x in lines]
         return " ".join(lines)
 
-    def __compute_ds_keys_values(self):
-        """
-            Computes process intensive data as key-value pairs and returns a
-            list containing each.
-        """
-        data_tuples = []
-
-        words = self._split_by_element_type(Text._element_types[1])
-        words_tpl = (Text._element_types[1], words)
-        data_tuples.append(words_tpl)
-
-        sentences = self._split_by_element_type(Text._element_types[2])
-        sentences_tpl = (Text._element_types[2], sentences)
-        data_tuples.append(sentences_tpl)
-
-        characters = self._split_by_element_type(Text._element_types[0])
-        characters_tpl = (Text._element_types[0], characters)
-        data_tuples.append(characters_tpl)
-
-        return data_tuples
-
     def _split_by_element_type(self, element_type):
         """
             Splits a text into a list elements depending on the given
             element_type.
         """
-
-        def _parse_sentences(text):
-            """Parses a Text and returns a list containing the sentences as Sentences"""
-            sentences = text.split('.')
-
-            return [Sentence(sentence) for sentence in sentences if sentence]
-
-        def _parse_words(text):
-            """Parses a Text and returns a list containing the words as Words"""
-            words = text.split(" ")
-
-            return [Word(word) for word in words if word]
-
-        def _parse_characters(text):
-            """Parses a Text and returns a list containing the characters"""
-            characters = list(text)
-
-            return characters
-
+        assert element_type in Text._element_types, f"No such type available cannot rank by matches: {element_type}"
         if element_type == Text._element_types[0]:
-            return _parse_characters(self.text)
+            # Parses a Text and returns a list containing the characters.
+            return list(self.text)
 
         elif element_type == Text._element_types[1]:
-            return _parse_words(self.text)
+            # Parses a Text and returns a list containing the words as Words.
+            words = self.text.split(" ")
+            return [Word(word) for word in words if word]
 
         elif element_type == Text._element_types[2]:
-            return _parse_sentences(self.text)
+            # Parses a Text and returns a list containing the sentences as Sentences.
+            sentences = self.text.split('.')
+            return [Sentence(sentence) for sentence in sentences if sentence]
 
     def generate_poem(self, syllables_per_line):
         """Generate poems using the words contained within the Text"""
         # TODO(keikakub): improve this algorithm, this method kind of sucks
         #   (Markov Chains would be a good start to generating poetry that makes more sense)
-        words = self.ds[Text._element_types[1]]
-        n_words = len(words) - 1
+        n_words = len(self.words) - 1
         if not self.first_word_picker:
-            self.first_word_picker = ProbabilityCounter(Counter(words))
-        unique_words = list(set(words))
+            self.first_word_picker = ProbabilityCounter(Counter(self.words))
+        unique_words = list(set(self.words))
         if not self.markov_chain_word_pickers:
             self.markov_chain_word_pickers = {}
         # Generate a poem.
@@ -214,8 +215,8 @@ class Text(BasicText):
                 if next_word:
                     if next_word not in self.markov_chain_word_pickers:
                         adjacent_words = [
-                            words[i + 1]
-                            for i, e in enumerate(words)
+                            self.words[i + 1]
+                            for i, e in enumerate(self.words)
                             if e == next_word and i < n_words
                         ]
                         self.markov_chain_word_pickers[
@@ -246,26 +247,26 @@ class Text(BasicText):
 
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
-        words = self.ds[Text._element_types[1]]
-        complex_words = [word for word in words if word.count_syllables() >= 3]
+        complex_words = [word for word in self.words if word.count_syllables() >= 3]
 
-        number_of_words = len(words)
-        number_of_complex_words = len(complex_words)
-        number_of_sentences = len(self.ds[Text._element_types[2]])
+        n_words = len(self.words)
+        n_complex_words = len(complex_words)
+        n_sentences = len(self.sentences)
 
-        return (0.4) * ((number_of_words / number_of_sentences) + 100 *
-                        (number_of_complex_words / number_of_words))
+        return (0.4) * ((n_words / n_sentences) + 100 *
+                        (n_complex_words / n_words))
 
     def _make_occurrences_Counter(self, element_type):
         """Returns a Counter with the elements decided by kind, either
          words, characters or sentences as keys from within a Text."""
-        elements = self.ds[element_type]
+        assert element_type in Text._element_types, f"No such type available cannot rank by occurrences: {element_type}"
+        elements = get_elements(element_type)
         return Counter([str(x) for x in elements])
 
     def count_occurrences(self, element_to_count, element_type):
         """Return the total number of times an element appears in a Text."""
+        assert element_type in Text._element_types, f"No such type available cannot rank by occurrences: {element_type}"
         occurrences = self._make_occurrences_Counter(element_type)
-
         if element_to_count in occurrences:
             return occurrences[element_to_count]
         else:
@@ -280,7 +281,7 @@ class Text(BasicText):
         """
         assert isinstance(matches_to_check, list)
         assert element_type in Text._element_types, f"No such type available cannot rank by matches: {element_type}"
-        set_of_elements = set(self.ds[element_type])
+        set_of_elements = set(get_elements(element_type))
         ranked_by_matches = []
         for element in set_of_elements:
             current_element_count = 0
