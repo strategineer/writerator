@@ -5,7 +5,7 @@ setup(
     py_modules=['writerator'],
     packages=find_packages(),
     python_requires='>=3',
-    install_requires=['click'],
+    install_requires=['click', 'PyHyphen'],
     entry_points='''
         [console_scripts]
         poet=writerator:cli
