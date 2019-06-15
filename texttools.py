@@ -95,9 +95,13 @@ class Word(BasicText):
 
     def count_syllables(self):
         """ Counts the number of syllables for an English language Word.  """
-        n_syllables = len(Word.h_en.syllables(self.text))
-        if n_syllables != 0:
-            return n_syllables
+        try:
+            n_syllables = len(Word.h_en.syllables(self.text))
+            if n_syllables > 0:
+                return n_syllables
+        except ValueError:
+            # Thrown by syllables function for words longer than 100 characters long.
+            return 30
         return 1
 
     def is_adverb(self):
