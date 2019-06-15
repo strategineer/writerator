@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import random
 import collections
 from operator import itemgetter
