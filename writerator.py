@@ -142,8 +142,7 @@ def count(ctx, element, element_type):
     help=
     """Count the number of matches of a pattern (sequences of characters separated by '~') within each one of the elements of the text.
     eg. You can count the occurrences of the letter 'e' in each word in the text and all words with at least one occurrence ordered by number of occurrences.
-    """
-)
+    """)
 @click.argument("patterns")
 @click.option(
     "-t",

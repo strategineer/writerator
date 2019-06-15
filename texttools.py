@@ -1,4 +1,5 @@
 import logging
+
 import sys
 from functools import total_ordering
 
@@ -15,8 +16,10 @@ from prob import ProbabilityCounter
 MAX_POEM_LINE_ITERATIONS = 100
 MAX_FUZZ_FOR_SYLLABLES = 0
 # TODO(keikakub): figure out a better way of improving the end of lines than banning weird words
-FORBIDDEN_LAST_WORDS = set(
-    ["and", "the", "to", "of", "for", "a", "into", "from", "that", "was", "each", "on", "in", "your", "then", "were", "their"])
+FORBIDDEN_LAST_WORDS = set([
+    "and", "the", "to", "of", "for", "a", "into", "from", "that", "was", "each",
+    "on", "in", "your", "then", "were", "their"
+])
 
 
 @total_ordering
@@ -133,7 +136,8 @@ class Text(BasicText):
     @property
     def characters(self):
         if not self._characters:
-            self._characters = self._split_by_element_type(Text._element_types[0])
+            self._characters = self._split_by_element_type(
+                Text._element_types[0])
         return self._characters
 
     @characters.setter
@@ -153,7 +157,8 @@ class Text(BasicText):
     @property
     def sentences(self):
         if not self._sentences:
-            self._sentences = self._split_by_element_type(Text._element_types[2])
+            self._sentences = self._split_by_element_type(
+                Text._element_types[2])
         return self._sentences
 
     @sentences.setter
@@ -246,7 +251,9 @@ class Text(BasicText):
 
     def calculate_Gunning_Fog_Index(self):
         """Calculates and returns the text's Gunning-Fog index."""
-        complex_words = [word for word in self.words if word.count_syllables() >= 3]
+        complex_words = [
+            word for word in self.words if word.count_syllables() >= 3
+        ]
 
         n_words = len(self.words)
         n_complex_words = len(complex_words)
