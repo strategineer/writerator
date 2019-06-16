@@ -17,7 +17,7 @@ poet is a command line tool that analyzes plain text files containing english la
 
 
 ## Installing poet
-Download the source code and run `pip install .` from within the folder containing the source code. This will install poet and its dependencies.
+Download the source code and run `pip3 install .` from within the folder containing the source code. This will install poet and its dependencies.
 
 ## TODO
 - Add code/options for rhyming
